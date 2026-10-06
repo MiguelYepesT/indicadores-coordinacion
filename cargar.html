@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cargar datos del mes – Tablero Arepas Sary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --rojo:#C8001E; --rojo-oscuro:#A30018; --amarillo:#F5C400; --verde:#1E7C45; --crema:#F6F1E7; --tinta:#241C18; --gris:#6E6460; --linea:#E9E0D2; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--crema); color: var(--tinta); font-family: "Nunito", "Trebuchet MS", system-ui, sans-serif; font-weight: 600; }
+  main { max-width: 820px; margin: 24px auto; padding: 0 18px 50px; }
+  header { display: flex; align-items: center; gap: 16px; margin-bottom: 18px; }
+  header img { height: 64px; }
+  h1 { font-weight: 900; font-size: 26px; margin: 0; }
+  .sub { color: var(--gris); margin: 4px 0 0; font-size: 14px; }
+  .tarjeta { background: #fff; border-radius: 16px; box-shadow: 0 6px 16px rgba(110,70,40,.10); padding: 20px; margin-bottom: 16px; }
+  .tarjeta h2 { margin: 0 0 4px; font-size: 18px; font-weight: 900; display: flex; align-items: center; gap: 10px; }
+  .num { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: var(--rojo); color: #fff; align-items: center; justify-content: center; font-size: 15px; flex: none; }
+  .tarjeta.bloqueada { opacity: .45; pointer-events: none; }
+  .ayuda { color: var(--gris); font-size: 14px; margin: 4px 0 14px; line-height: 1.5; }
+  label.campo { display: block; font-weight: 800; font-size: 14px; margin: 12px 0 6px; }
+  input[type=text], input[type=password], input[type=number], select {
+    font: inherit; font-weight: 700; width: 100%; padding: 11px 12px; border: 2px solid var(--linea); border-radius: 10px; font-size: 15px; background: #fff; color: var(--tinta);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--rojo); }
+  .fila { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .fila > div { flex: 1 1 200px; }
+  .boton {
+    font: inherit; font-weight: 800; font-size: 14px; cursor: pointer; border-radius: 10px; padding: 11px 18px;
+    background: var(--rojo); color: #fff; border: 2px solid var(--rojo-oscuro); box-shadow: 0 2px 0 var(--rojo-oscuro);
+  }
+  .boton.secundario { background: #fff; color: var(--rojo); }
+  .boton.principal { background: var(--amarillo); color: var(--rojo); border-color: #D9A900; box-shadow: 0 2px 0 #D9A900; font-size: 16px; padding: 13px 26px; }
+  .boton:disabled { opacity: .45; cursor: not-allowed; }
+  .boton:focus-visible, .archivo:focus-within { outline: 3px solid var(--tinta); outline-offset: 2px; }
+  .enlace { font: inherit; font-weight: 800; color: var(--rojo); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+  .estado { margin-top: 10px; font-weight: 800; min-height: 20px; }
+  .ok { color: var(--verde); }
+  .mal { color: var(--rojo); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { font-size: 12px; font-weight: 800; padding: 4px 9px; border-radius: 20px; background: #FBF7EF; border: 1px solid var(--linea); }
+  .chip.falta { background: #FFF7D6; border-color: var(--amarillo); }
+
+  .archivos { display: grid; gap: 10px; }
+  .archivo { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: center; border: 2px dashed var(--linea); border-radius: 12px; padding: 12px 14px; }
+  .archivo.listo { border-style: solid; border-color: var(--verde); background: #F3FAF5; }
+  .archivo strong { font-size: 15px; }
+  .archivo small { grid-column: 1; color: var(--gris); font-size: 12.5px; }
+  .archivo .nombre { grid-column: 1; font-size: 13px; color: var(--verde); font-weight: 800; word-break: break-all; }
+  .archivo .boton { grid-row: 1 / span 3; grid-column: 2; }
+  .archivo input[type=file] { display: none; }
+
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  th { background: var(--rojo); color: #fff; font-weight: 900; padding: 8px 10px; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--linea); text-align: right; }
+  .antes { color: var(--gris); font-size: 12.5px; display: block; }
+  .cambio { font-weight: 900; }
+  ul.avisos { margin: 12px 0 0; padding-left: 20px; font-size: 13.5px; line-height: 1.5; color: #8A5A00; }
+  .error-caja { background: #FDECEE; border: 2px solid var(--rojo); border-radius: 12px; padding: 12px 14px; margin-top: 12px; color: var(--rojo); font-weight: 800; }
+  .exito { background: #F3FAF5; border: 2px solid var(--verde); border-radius: 12px; padding: 14px; margin-top: 14px; line-height: 1.5; }
+  .acciones { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 16px; }
+  .privacidad { font-size: 13px; color: var(--gris); line-height: 1.5; margin: 6px 0 0; }
+  .privacidad a, .exito a { color: var(--rojo); font-weight: 800; }
+  @media (max-width: 560px) { .archivo { grid-template-columns: 1fr; } .archivo .boton { grid-row: auto; grid-column: 1; justify-self: start; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="logo.png" alt="Arepas Sary" onerror="this.remove()">
+    <div>
+      <h1>Cargar datos del mes</h1>
+      <p class="sub">Elige el mes, adjunta los archivos y publica. El tablero se actualiza solo.</p>
+    </div>
+  </header>
+
+  <!-- Paso 1 -->
+  <section class="tarjeta" id="paso1">
+    <h2><span class="num">1</span>Entra con la contraseña de actualización</h2>
+    <p class="ayuda">Funciona desde cualquier computador. Es distinta del PIN que se usa para ver el tablero. <span id="sesionActiva" hidden>Sesión abierta en esta pestaña. <button type="button" class="enlace" id="btnSalir">Salir</button></span></p>
+    <div class="fila">
+      <div><label class="campo" for="pin">Contraseña de actualización</label><input type="password" id="pin" autocomplete="current-password"></div>
+      <div style="flex:0 0 auto"><button type="button" class="boton" id="btnAbrir">Entrar</button></div>
+    </div>
+    <div class="estado" id="estadoAbrir" role="status"></div>
+    <div class="chips" id="chipsMeses"></div>
+  </section>
+
+  <!-- Paso 2 -->
+  <section class="tarjeta bloqueada" id="paso2">
+    <h2><span class="num">2</span>¿Qué mes vas a cargar o reemplazar?</h2>
+    <select id="selMes" aria-label="Mes a cargar"></select>
+    <p class="ayuda" id="ayudaMes" style="margin-top:8px"></p>
+  </section>
+
+  <!-- Paso 3 -->
+  <section class="tarjeta bloqueada" id="paso3">
+    <h2><span class="num">3</span>Adjunta los archivos</h2>
+    <p class="ayuda">Puedes adjuntar uno, dos o los tres. Lo que no adjuntes se queda como está publicado.</p>
+    <div class="archivos">
+      <div class="archivo" id="slotMensual">
+        <strong>Excel de ingresos y retiros del mes</strong>
+        <small>El archivo mensual de la subcarpeta (hoja INGRESOS).</small>
+        <span class="nombre"></span>
+        <label class="boton secundario">Elegir archivo<input type="file" accept=".xlsx,.xls"></label>
+      </div>
+      <div class="archivo" id="slotConsol">
+        <strong>Consolidado de retiros</strong>
+        <small>INFO RETIROS INDICADOR, la versión más reciente. Reemplaza los retiros de todos los meses que traiga.</small>
+        <span class="nombre"></span>
+        <label class="boton secundario">Elegir archivo<input type="file" accept=".xlsx,.xls"></label>
+      </div>
+      <div class="archivo" id="slotPlanta">
+        <strong>Total de empleados</strong>
+        <small>TOTAL EMPLEADOS, con el bloque del mes. Se usa para el índice de rotación.</small>
+        <span class="nombre"></span>
+        <label class="boton secundario">Elegir archivo<input type="file" accept=".xlsx,.xls"></label>
+      </div>
+    </div>
+    <label class="campo" for="plantaManual">Planta del mes (opcional)</label>
+    <input type="number" id="plantaManual" min="1" step="1" inputmode="numeric" placeholder="Solo si no viene en el archivo de total de empleados">
+    <div class="acciones"><button type="button" class="boton" id="btnRevisar">Revisar cambios</button></div>
+    <div class="estado" id="estadoRevisar" role="status"></div>
+  </section>
+
+  <!-- Paso 4 -->
+  <section class="tarjeta bloqueada" id="paso4">
+    <h2><span class="num">4</span>Revisa y publica</h2>
+    <p class="ayuda">Así quedan los meses que cambian. Los demás meses no se tocan.</p>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Mes</th><th>Ingresos</th><th>Retiros</th><th>Rot. temprana</th><th>Planta</th><th>Índice</th></tr></thead>
+      <tbody id="tCambios"></tbody>
+    </table></div>
+    <div id="cajaErrores"></div>
+    <ul class="avisos" id="lAvisos"></ul>
+    <div class="acciones">
+      <button type="button" class="boton principal" id="btnPublicar">Publicar</button>
+      <button type="button" class="boton secundario" id="btnPrevia">Ver tablero con estos datos</button>
+      <button type="button" class="enlace" id="btnDescargar">Descargar data.json</button>
+    </div>
+    <div class="estado" id="estadoPublicar" role="status"></div>
+    <div id="cajaExito"></div>
+  </section>
+
+  <details class="tarjeta" id="cajaAdmin">
+    <summary style="cursor:pointer;font-weight:900;font-size:16px">Administrador: configurar el acceso</summary>
+    <p class="ayuda" style="margin-top:12px">Se hace una vez, o cuando cambie el token, el PIN o la contraseña de actualización. Guarda en el repositorio el token y el PIN cifrados con la contraseña de actualización (archivo <code>acceso.json</code>).</p>
+    <div class="fila">
+      <div><label class="campo" for="adOwner">Usuario de GitHub</label><input type="text" id="adOwner" autocomplete="off"></div>
+      <div><label class="campo" for="adRepo">Repositorio</label><input type="text" id="adRepo" autocomplete="off"></div>
+    </div>
+    <label class="campo" for="adToken">Token de GitHub (fine-grained, solo este repositorio, Contents: Read and write)</label>
+    <input type="password" id="adToken" autocomplete="off" placeholder="github_pat_…">
+    <label class="campo" for="adPin">PIN del tablero (el que se usa para ver los datos)</label>
+    <input type="password" id="adPin" autocomplete="off">
+    <div class="fila">
+      <div><label class="campo" for="adClave1">Contraseña de actualización</label><input type="password" id="adClave1" autocomplete="new-password"></div>
+      <div><label class="campo" for="adClave2">Repítela</label><input type="password" id="adClave2" autocomplete="new-password"></div>
+    </div>
+    <p class="ayuda" style="margin-top:8px">Recomendado: al menos 12 caracteres y distinta del PIN. Quien la tenga puede modificar el repositorio.</p>
+    <div class="acciones"><button type="button" class="boton" id="btnGuardarAcceso">Guardar acceso</button></div>
+    <div class="estado" id="estadoAdmin" role="status"></div>
+  </details>
+
+  <p class="privacidad"><strong style="color:var(--verde)">Los Excel no salen de este computador.</strong> Se leen dentro del navegador; a GitHub solo se envía el resultado cifrado con el PIN, que contiene conteos por mes y empresa, sin nombres ni documentos.</p>
+  <p class="privacidad">¿Necesitas reconstruir todo desde la carpeta completa? Usa <a href="actualizar.html">la actualización completa</a>.</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="procesar.js"></script>
+<script src="cifrado.js"></script>
+<script src="github.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var fmtN = new Intl.NumberFormat('es-CO');
+  var fmtP = new Intl.NumberFormat('es-CO', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  var MESES = ProcesarSary.MESES;
+  var estado = { base: null, sha: null, pin: null, fuente: null, resultado: null };
+  var archivos = { slotMensual: null, slotConsol: null, slotPlanta: null };
+
+  function cap(t) { return t.charAt(0) + t.slice(1).toLowerCase(); }
+  function nombrePer(id) { return MESES[Number(id.slice(5, 7)) - 1] + ' ' + id.slice(0, 4); }
+  function siguiente(id) { var a = Number(id.slice(0, 4)), m = Number(id.slice(5, 7)) + 1; if (m > 12) { m = 1; a++; } return a + '-' + String(m).padStart(2, '0'); }
+  function habilitar(id, si) { $(id).classList.toggle('bloqueada', !si); }
+  function escapar(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  // ---------- Acceso (token + PIN cifrados con la contraseña de actualización) ----------
+  var ITER_ACCESO = 1000000;
+  function cargarAccesoGuardado() {
+    try { return JSON.parse(sessionStorage.getItem('sary-acceso') || 'null'); } catch (e) { return null; }
+  }
+  function leerArchivoAcceso() {
+    return fetch('acceso.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) {
+      if (r.status === 404) throw new Error('SIN_ACCESO');
+      if (!r.ok) throw new Error('No se pudo leer acceso.json (' + r.status + ').');
+      return r.json();
+    });
+  }
+  $('btnSalir').onclick = function () { sessionStorage.removeItem('sary-acceso'); location.reload(); };
+
+  // Administrador
+  (function () {
+    var sug = GitHubSary.sugerencia();
+    $('adOwner').value = sug.owner; $('adRepo').value = sug.repo;
+  })();
+  $('btnGuardarAcceso').onclick = function () {
+    var e = $('estadoAdmin'), btn = this;
+    var cfg = { owner: $('adOwner').value.trim(), repo: $('adRepo').value.trim(), token: $('adToken').value.trim() };
+    var pin = $('adPin').value, c1 = $('adClave1').value, c2 = $('adClave2').value;
+    if (!cfg.owner || !cfg.repo || !cfg.token || !pin || !c1) { e.innerHTML = '<span class="mal">Completa todos los campos.</span>'; return; }
+    if (c1 !== c2) { e.innerHTML = '<span class="mal">Las dos contraseñas de actualización no coinciden.</span>'; return; }
+    btn.disabled = true;
+    e.textContent = 'Probando el token…';
+    GitHubSary.probar(cfg).then(function () {
+      e.textContent = 'Verificando el PIN con los datos publicados…';
+      return GitHubSary.leer(cfg, 'data.json');
+    }).then(function (pub) {
+      if (!pub.texto) return null;
+      var j = JSON.parse(pub.texto);
+      if (!j.cifrado) return null;
+      return CifradoSary.descifrar(j, pin).catch(function () { throw new Error('El PIN no abre los datos publicados. Revisa el PIN del tablero.'); });
+    }).then(function () {
+      e.textContent = 'Cifrando el acceso (tarda unos segundos)…';
+      return CifradoSary.cifrar({ owner: cfg.owner, repo: cfg.repo, token: cfg.token, pin: pin }, c1, ITER_ACCESO);
+    }).then(function (paquete) {
+      e.textContent = 'Guardando acceso.json en el repositorio…';
+      return GitHubSary.leer(cfg, 'acceso.json').then(function (actual) {
+        return GitHubSary.guardar(cfg, 'acceso.json', JSON.stringify(paquete), actual.sha, 'Configura el acceso para cargar datos');
+      });
+    }).then(function () {
+      ['adToken', 'adPin', 'adClave1', 'adClave2'].forEach(function (id) { $(id).value = ''; });
+      e.innerHTML = '<span class="ok">Listo. Desde cualquier computador se entra con la contraseña de actualización. Puede tardar unos minutos en quedar disponible.' +
+        (c1 === pin || c1.length < 12 ? '</span><br><span class="mal">Ojo: la contraseña es corta o igual al PIN; cualquiera que vea el tablero podría intentar adivinarla.' : '') + '</span>';
+      btn.disabled = false;
+    }).catch(function (err) {
+      e.innerHTML = '<span class="mal">' + escapar(err.message) + '</span>';
+      btn.disabled = false;
+    });
+  };
+
+  // ---------- Paso 1: abrir ----------
+  function abrirDatos(acc) {
+    return GitHubSary.leer(acc, 'data.json').then(function (pub) {
+      if (!pub.texto) return { datos: null, sha: null };
+      var json = JSON.parse(pub.texto);
+      if (!json.cifrado) return { datos: json, sha: pub.sha };
+      return CifradoSary.descifrar(json, acc.pin).then(function (d) { return { datos: d, sha: pub.sha }; });
+    });
+  }
+
+  function entrar(acc) {
+    var e = $('estadoAbrir');
+    e.textContent = 'Abriendo los datos publicados…';
+    return abrirDatos(acc).then(function (o) {
+      estado.acceso = acc; estado.pin = acc.pin; estado.sha = o.sha; estado.fuente = 'github';
+      sessionStorage.setItem('sary-acceso', JSON.stringify(acc));
+      $('sesionActiva').hidden = false;
+      estado.base = o.datos || { version: 3, datos: [], periodos: [], empresas: [], subprocesos: { lista: [], datos: [] } };
+      var p = estado.base.periodos || [];
+      var gen = estado.base.generado ? new Date(estado.base.generado).toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+      e.innerHTML = '<span class="ok">' + (p.length ? 'Datos publicados: ' + cap(p[0].nombre) + ' a ' + cap(p[p.length - 1].nombre) + ' de ' + p[p.length - 1].anio + (gen ? '. Última actualización: ' + gen + '.' : '.') : 'Todavía no hay datos publicados; vas a cargar el primero.') + '</span>';
+      pintarChips();
+      pintarMeses();
+      habilitar('paso2', true); habilitar('paso3', true);
+    });
+  }
+
+  $('btnAbrir').onclick = function () {
+    var clave = $('pin').value, e = $('estadoAbrir');
+    if (!clave) { e.innerHTML = '<span class="mal">Escribe la contraseña de actualización.</span>'; return; }
+    e.textContent = 'Verificando la contraseña (tarda unos segundos)…';
+    leerArchivoAcceso().then(function (paquete) {
+      return CifradoSary.descifrar(paquete, clave);
+    }).then(entrar).catch(function (err) {
+      var m = err.message === 'CONTRASENA' ? 'Contraseña incorrecta.'
+        : err.message === 'SIN_ACCESO' ? 'El acceso todavía no está configurado. El administrador debe configurarlo al final de esta página.'
+        : err.status === 401 ? 'El token guardado venció o fue revocado. El administrador debe configurar uno nuevo al final de esta página.'
+        : err.message;
+      e.innerHTML = '<span class="mal">' + escapar(m) + '</span>';
+    });
+  };
+  $('pin').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') $('btnAbrir').click(); });
+
+  function pintarChips() {
+    $('chipsMeses').innerHTML = (estado.base.periodos || []).map(function (x) {
+      return '<span class="chip' + (x.tieneIngresos && x.planta ? '' : ' falta') + '">' + cap(x.nombre) + (x.tieneIngresos ? '' : ' · sin ingresos') + (x.planta ? '' : ' · sin planta') + '</span>';
+    }).join('');
+  }
+
+  // ---------- Paso 2: mes ----------
+  function pintarMeses(mantener) {
+    var p = estado.base.periodos || [];
+    var opciones = p.map(function (x) {
+      var falta = !x.tieneIngresos ? 'faltan ingresos' : !x.planta ? 'falta planta' : 'ya cargado, reemplazar';
+      return { id: x.id, texto: nombrePer(x.id) + ' (' + falta + ')', pendiente: !x.tieneIngresos || !x.planta };
+    });
+    var ultimo = p.length ? p[p.length - 1].id : null;
+    var hoy = new Date(), actual = hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0');
+    var nuevos = [];
+    var s = ultimo ? siguiente(ultimo) : actual;
+    for (var i = 0; i < 2; i++) { nuevos.push({ id: s, texto: nombrePer(s) + ' (nuevo)', pendiente: true }); s = siguiente(s); }
+    var todas = opciones.concat(nuevos);
+    var porDefecto = (todas.filter(function (o) { return o.pendiente; })[0] || todas[todas.length - 1]).id;
+    $('selMes').innerHTML = todas.slice().reverse().map(function (o) {
+      return '<option value="' + o.id + '"' + (o.id === porDefecto ? ' selected' : '') + '>' + o.texto + '</option>';
+    }).join('');
+    alCambiarMes(mantener);
+  }
+  function alCambiarMes(mantener) {
+    var mes = $('selMes').value;
+    var pm = (estado.base.plantaPorMes || {})[mes] || ((estado.base.periodos || []).filter(function (x) { return x.id === mes; })[0] || {}).planta;
+    $('plantaManual').value = '';
+    $('plantaManual').placeholder = pm ? 'Hoy: ' + fmtN.format(pm) + '. Escribe otro número solo si quieres cambiarlo' : 'Solo si no viene en el archivo de total de empleados';
+    var existe = (estado.base.periodos || []).some(function (x) { return x.id === mes; });
+    $('ayudaMes').textContent = existe
+      ? 'Este mes ya tiene datos publicados. Lo que adjuntes reemplaza los datos de ese mes; los demás meses no cambian.'
+      : 'Mes nuevo: se agrega al tablero.';
+    if (mantener !== true) invalidar();
+  }
+  $('selMes').onchange = function () { alCambiarMes(); };
+
+  // ---------- Paso 3: archivos ----------
+  Object.keys(archivos).forEach(function (id) {
+    var caja = $(id), input = caja.querySelector('input[type=file]');
+    input.onchange = function () {
+      var f = input.files[0];
+      archivos[id] = f || null;
+      caja.classList.toggle('listo', !!f);
+      caja.querySelector('.nombre').textContent = f ? f.name : '';
+      invalidar();
+    };
+  });
+  $('plantaManual').oninput = invalidar;
+
+  function invalidar() {
+    estado.resultado = null;
+    habilitar('paso4', false);
+    $('cajaExito').innerHTML = '';
+    $('estadoPublicar').textContent = '';
+  }
+
+  $('btnRevisar').onclick = function () {
+    var e = $('estadoRevisar');
+    var lista = Object.keys(archivos).map(function (k) { return archivos[k]; }).filter(Boolean);
+    var planta = parseInt($('plantaManual').value, 10) || 0;
+    if (!lista.length && !planta) { e.innerHTML = '<span class="mal">Adjunta al menos un archivo o escribe la planta del mes.</span>'; return; }
+    e.textContent = 'Leyendo archivos…';
+    Promise.all(lista.map(function (f) {
+      return f.arrayBuffer().then(function (b) { return { nombre: f.name, datos: new Uint8Array(b), fecha: f.lastModified || 0 }; });
+    })).then(function (leidos) {
+      setTimeout(function () {
+        try {
+          var r = ProcesarSary.procesar(XLSX, leidos);
+          var res = ProcesarSary.fusionar(estado.base, r, $('selMes').value, planta);
+          estado.resultado = res;
+          mostrarRevision(res, r);
+          e.textContent = '';
+          habilitar('paso4', true);
+          $('paso4').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (err) {
+          e.innerHTML = '<span class="mal">No se pudieron procesar los archivos: ' + escapar(err.message) + '</span>';
+        }
+      }, 20);
+    });
+  };
+
+  function celda(a, d, fmt) {
+    fmt = fmt || function (v) { return v === null || v === undefined ? '–' : fmtN.format(v); };
+    var igual = fmt(a) === fmt(d);
+    return '<td>' + (igual ? fmt(d) : '<span class="antes">antes ' + fmt(a) + '</span><span class="cambio">' + fmt(d) + '</span>') + '</td>';
+  }
+
+  function mostrarRevision(res, r) {
+    var idx = function (t) { return t.planta && t.retiros !== undefined ? t.retiros / t.planta : null; };
+    var fp = function (v) { return v === null ? '–' : fmtP.format(v); };
+    $('tCambios').innerHTML = res.cambios.length ? res.cambios.map(function (c) {
+      var ingA = c.antes.tieneIngresos ? c.antes.ingresos : null, ingD = c.despues.tieneIngresos ? c.despues.ingresos : null;
+      if (!c.antes.existe) {
+        var plano = function (v, f) { return '<td><span class="cambio">' + (f || function (x) { return x === null ? '–' : fmtN.format(x); })(v) + '</span></td>'; };
+        return '<tr><td>' + cap(c.nombre) + '<span class="antes">mes nuevo</span></td>' + plano(ingD) + plano(c.despues.retiros) +
+          plano(c.despues.rotTemprana) + plano(c.despues.planta) + plano(idx(c.despues), fp) + '</tr>';
+      }
+      return '<tr><td>' + cap(c.nombre) + '</td>' + celda(ingA, ingD) + celda(c.antes.retiros, c.despues.retiros) +
+        celda(c.antes.rotTemprana, c.despues.rotTemprana) + celda(c.antes.planta, c.despues.planta) +
+        celda(idx(c.antes), idx(c.despues), fp) + '</tr>';
+    }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gris)">Los archivos no cambian ningún dato publicado.</td></tr>';
+
+    var reconocidos = r.usados.map(function (u) { return u.tipo; });
+    var faltan = [];
+    if (archivos.slotMensual && reconocidos.indexOf('mensual') < 0) faltan.push('El archivo de ingresos y retiros no se reconoció como Excel mensual (debe tener la hoja INGRESOS).');
+    if (archivos.slotConsol && reconocidos.indexOf('consolidado') < 0) faltan.push('El archivo de retiros no se reconoció como consolidado (debe tener la columna FECHA DE RETIRO).');
+    if (archivos.slotPlanta && reconocidos.indexOf('planta') < 0) faltan.push('El archivo de total de empleados no tiene bloques con "MES DE AÑO" y la fila TOTAL.');
+    var errores = res.errores.concat(faltan);
+    $('cajaErrores').innerHTML = errores.length ? '<div class="error-caja">' + errores.map(escapar).join('<br>') + '</div>' : '';
+    $('lAvisos').innerHTML = res.avisos.concat(r.omitidos.map(function (o) { return 'No se usó: ' + o; })).map(function (a) { return '<li>' + escapar(a) + '</li>'; }).join('');
+    var puede = !errores.length && res.cambios.length > 0 && estado.fuente === 'github';
+    $('btnPublicar').disabled = !puede;
+    $('btnPublicar').title = '';
+  }
+
+  // ---------- Paso 4: publicar ----------
+  $('btnPublicar').onclick = function () {
+    var c = estado.acceso, e = $('estadoPublicar'), btn = this;
+    if (!c || !estado.resultado) return;
+    btn.disabled = true;
+    e.textContent = 'Protegiendo con el PIN…';
+    CifradoSary.cifrar(estado.resultado.data, estado.pin).then(function (paquete) {
+      e.textContent = 'Publicando en GitHub…';
+      var meses = estado.resultado.cambios.map(function (x) { return cap(x.nombre); }).join(', ');
+      return GitHubSary.guardar(c, 'data.json', JSON.stringify(paquete), estado.sha, 'Actualiza datos: ' + meses);
+    }).then(function (r) {
+      estado.base = estado.resultado.data;
+      estado.sha = r.sha;
+      e.textContent = '';
+      var tablero = location.href.replace(/cargar\.html.*$/, '');
+      $('cajaExito').innerHTML = '<div class="exito"><strong class="ok">Publicado.</strong> El tablero se actualiza en unos minutos (normalmente de 1 a 5; a veces hasta 10). ' +
+        '<a href="' + tablero + '" target="_blank" rel="noopener">Abrir el tablero</a>. Si vas a cargar otro mes, elígelo arriba y adjunta sus archivos.</div>';
+      Object.keys(archivos).forEach(function (id) {
+        archivos[id] = null; var caja = $(id); caja.classList.remove('listo'); caja.querySelector('.nombre').textContent = ''; caja.querySelector('input').value = '';
+      });
+      pintarChips();
+      pintarMeses(true);
+      btn.disabled = true;
+    }).catch(function (err) {
+      btn.disabled = false;
+      e.innerHTML = '<span class="mal">' + escapar(err.status === 401 ? 'El token guardado venció o fue revocado. El administrador debe configurar uno nuevo al final de esta página.' : err.message) + '</span>';
+    });
+  };
+
+  $('btnPrevia').onclick = function () {
+    if (!estado.resultado) return;
+    try {
+      localStorage.setItem('sary-vista-previa', JSON.stringify(estado.resultado.data));
+      window.open('index.html?vista-previa', '_blank');
+    } catch (err) { alert('El navegador no permitió abrir la vista previa.'); }
+  };
+
+  $('btnDescargar').onclick = function () {
+    if (!estado.resultado) return;
+    CifradoSary.cifrar(estado.resultado.data, estado.pin).then(function (paquete) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(paquete)], { type: 'application/json' }));
+      a.download = 'data.json';
+      document.body.appendChild(a); a.click(); a.remove();
+    });
+  };
+
+  var guardado = cargarAccesoGuardado();
+  if (guardado) entrar(guardado).catch(function (err) {
+    sessionStorage.removeItem('sary-acceso');
+    $('estadoAbrir').innerHTML = '<span class="mal">' + escapar(err.message) + '</span>';
+  });
+})();
+</script>
+</body>
+</html>

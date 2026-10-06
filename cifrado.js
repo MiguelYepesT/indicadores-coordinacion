@@ -34,15 +34,16 @@
       });
   }
 
-  function cifrar(objeto, contrasena) {
-    var sal = aleatorio(16), iv = aleatorio(12);
-    return derivar(contrasena, sal, ITERACIONES).then(function (clave) {
+  // iteraciones: opcional; más alto = más lento de abrir y más difícil de adivinar
+  function cifrar(objeto, contrasena, iteraciones) {
+    var sal = aleatorio(16), iv = aleatorio(12), iter = iteraciones || ITERACIONES;
+    return derivar(contrasena, sal, iter).then(function (clave) {
       return subtle.encrypt({ name: 'AES-GCM', iv: iv }, clave, new TextEncoder().encode(JSON.stringify(objeto)));
     }).then(function (buf) {
       return {
         cifrado: true,
         formato: 'PBKDF2-SHA256/AES-GCM-256',
-        iteraciones: ITERACIONES,
+        iteraciones: iter,
         sal: aB64(sal),
         iv: aB64(iv),
         datos: aB64(new Uint8Array(buf))
