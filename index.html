@@ -177,6 +177,20 @@
   .bloque .sutil { color: var(--gris); font-size: 12.5px; }
   .bloque b { font-weight: 900; }
   .lienzo.motivos { height: 300px; }
+  .matriz-bloque { margin-top: 10px; }
+  .matriz-bloque h3 { margin: 6px 0 8px; font-size: 14px; font-weight: 900; color: var(--rojo); }
+  table.matriz { font-size: 12.5px; min-width: 640px; }
+  table.matriz thead th { text-align: center; vertical-align: bottom; line-height: 1.15; padding: 7px 6px; font-size: 12px; }
+  table.matriz thead th:first-child { text-align: left; min-width: 220px; }
+  table.matriz td { text-align: center; padding: 6px; border-bottom: 1px solid var(--linea); }
+  table.matriz tbody tr:nth-child(even) td { background: transparent; }
+  table.matriz td:first-child { text-align: left; font-weight: 700; white-space: normal; }
+  table.matriz td.total, table.matriz th.total { font-weight: 900; background: #FBF1E3; }
+  table.matriz thead th.total { background: var(--vino); }
+  table.matriz tfoot td { background: var(--rojo); color: var(--blanco); font-weight: 900; text-align: center; border: 0; padding: 7px 6px; }
+  table.matriz tfoot td:first-child { text-align: left; border-bottom-left-radius: 8px; }
+  table.matriz tfoot td:last-child { border-bottom-right-radius: 8px; }
+  .matriz-conclusion { font-size: 13.5px; margin: 10px 2px 4px; line-height: 1.5; }
 
   .seccion {
     grid-column: span 12; margin: 10px 0 -4px; font-size: 13px; font-weight: 900; letter-spacing: 0.08em; color: var(--rojo);
@@ -390,6 +404,13 @@
           <div class="lienzo motivos"><canvas id="gCausas" aria-label="Causas de terminación"></canvas><div class="vacio" id="eCausas"></div></div>
         </section>
       </div>
+      <section class="tarjeta span-12">
+        <div class="analisis-cabeza">
+          <h2 id="tMatriz">MOTIVO DE RETIRO POR SUBPROCESO</h2>
+          <button type="button" class="copiar" id="btnCopiarTablas">Copiar tablas</button>
+        </div>
+        <div id="matriz"></div>
+      </section>
     </div>
   </div>
 
@@ -398,7 +419,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-<script src="cifrado.js?v=20261006c"></script>
+<script src="cifrado.js?v=20261006d"></script>
 <script>
 (function () {
   'use strict';
@@ -491,6 +512,7 @@
     pintarSubprocesos();
     pintarAnalisis();
     pintarMotivos();
+    pintarMatriz();
     graficos.evolucion.update('none');
     graficos.rotacion.update('none');
     graficos.indice.update('none');
@@ -1362,6 +1384,99 @@
       });
     });
   }
+
+  // ---------- Tabla motivo de retiro por subproceso ----------
+  var ORDEN_COLUMNAS = ['Empaque', 'Mercadeo Medellín', 'Mercadeo Bogotá', 'Mercadeo Cali', 'Piso 3'];
+  var tablasTSV = '';
+  function sumarMatrices(ids, tipo) {
+    var m = {};
+    ids.forEach(function (id) {
+      var d = D.retirosDetalle && D.retirosDetalle[id];
+      var t = d && d.porArea && d.porArea[tipo];
+      if (!t) return;
+      Object.keys(t).forEach(function (mot) {
+        var fila = m[mot] || (m[mot] = {});
+        Object.keys(t[mot]).forEach(function (c) { fila[c] = (fila[c] || 0) + t[mot][c]; });
+      });
+    });
+    return m;
+  }
+  function conclusion(filasM, tipoTxt) {
+    var reales = filasM.filter(function (f) { return NO_MOTIVO.indexOf(f.motivo) < 0; });
+    if (!reales.length) return '';
+    var grupos = [];
+    reales.forEach(function (f) {
+      var g = grupos[grupos.length - 1];
+      if (g && g.n === f.total) g.items.push(f.motivo); else grupos.push({ n: f.total, items: [f.motivo] });
+    });
+    var une = function (arr) { return arr.length > 1 ? arr.slice(0, -1).join(', ') + ' y ' + arr[arr.length - 1] : arr[0]; };
+    var g1 = grupos[0], g2 = grupos[1];
+    var txt = 'En ' + tipoTxt + ', ' + (g1.items.length > 1 ? 'los motivos principales son ' : 'el motivo principal es ') +
+      une(g1.items.map(function (x) { return b(x) + ' (' + g1.n + ')'; }));
+    if (g2 && g1.items.length < 3) txt += ', seguido' + (g2.items.length > 1 ? 's' : '') + ' de ' + une(g2.items.map(function (x) { return x + ' (' + g2.n + ')'; }));
+    return txt + '.';
+  }
+  function pintarMatriz() {
+    var ids = sel === 'ANIO' ? periodosDelAnio(anioSeleccionado()).map(function (p) { return p.id; }) : [sel];
+    var suf = sel === 'ANIO' ? ' – ' + anioSeleccionado() : ' – ' + nombrePeriodo(periodo(sel));
+    document.getElementById('tMatriz').textContent = 'MOTIVO DE RETIRO POR SUBPROCESO' + suf;
+    var R = sumarMatrices(ids, 'renuncias'), T = sumarMatrices(ids, 'terminaciones');
+    var cont = document.getElementById('matriz');
+    var con = D.periodos.filter(function (p) { var d = D.retirosDetalle && D.retirosDetalle[p.id]; return d && d.porArea; });
+    if (!Object.keys(R).length && !Object.keys(T).length) {
+      cont.innerHTML = '<p class="sutil" style="color:var(--gris);text-align:center;padding:20px">' +
+        (con.length ? 'Disponible desde ' + cap(nombrePeriodo(con[0])) + ' de ' + con[0].anio + '.' : 'Vuelve a cargar el consolidado de retiros para ver esta tabla.') + '</p>';
+      tablasTSV = '';
+      return;
+    }
+    // Columnas: las cinco principales en orden fijo y luego las demás que tengan casos
+    var vistas = {};
+    [R, T].forEach(function (m) { Object.keys(m).forEach(function (mot) { Object.keys(m[mot]).forEach(function (c) { vistas[c] = true; }); }); });
+    var cols = ORDEN_COLUMNAS.filter(function (c) { return vistas[c]; })
+      .concat(Object.keys(vistas).filter(function (c) { return ORDEN_COLUMNAS.indexOf(c) < 0 && c !== 'Sin dato'; }).sort())
+      .concat(vistas['Sin dato'] ? ['Sin dato'] : []);
+    var corto = function (c) { return c.replace('Mercadeo ', 'Mercadeo<br>').replace('Sistema de gestión', 'Sistema de<br>gestión').replace('Desarrollo humano', 'Desarrollo<br>humano'); };
+    var tsv = [];
+    function tabla(m, titulo, tipoTxt) {
+      var filasM = Object.keys(m).map(function (mot) {
+        var tot = cols.reduce(function (s, c) { return s + (m[mot][c] || 0); }, 0);
+        return { motivo: mot, valores: m[mot], total: tot };
+      }).sort(function (x, y) {
+        var sx = x.motivo === 'Sin dato' ? 1 : 0, sy = y.motivo === 'Sin dato' ? 1 : 0;
+        return sx - sy || y.total - x.total || x.motivo.localeCompare(y.motivo);
+      });
+      if (!filasM.length) return '<div class="matriz-bloque"><h3>' + titulo + '</h3><p class="sutil" style="color:var(--gris)">Sin registros en este periodo.</p></div>';
+      var max = 0;
+      filasM.forEach(function (f) { cols.forEach(function (c) { max = Math.max(max, f.valores[c] || 0); }); });
+      var totCol = cols.map(function (c) { return filasM.reduce(function (s, f) { return s + (f.valores[c] || 0); }, 0); });
+      var gran = totCol.reduce(function (s, v) { return s + v; }, 0);
+      tsv.push(titulo, ['Motivo'].concat(cols, ['TOTAL']).join('\t'));
+      filasM.forEach(function (f) { tsv.push([f.motivo].concat(cols.map(function (c) { return f.valores[c] || ''; }), [f.total]).join('\t')); });
+      tsv.push(['TOTAL'].concat(totCol, [gran]).join('\t'), '');
+      var html = '<div class="matriz-bloque"><h3>' + titulo + '</h3><div class="tabla-envoltura"><table class="matriz"><thead><tr><th>Motivo</th>' +
+        cols.map(function (c) { return '<th>' + corto(c) + '</th>'; }).join('') + '<th class="total">TOTAL</th></tr></thead><tbody>' +
+        filasM.map(function (f) {
+          return '<tr><td>' + f.motivo + '</td>' + cols.map(function (c) {
+            var v = f.valores[c] || 0;
+            var fondo = v ? 'background:rgba(200,0,30,' + (0.06 + 0.3 * v / max).toFixed(3) + ')' : '';
+            return '<td style="' + fondo + '">' + (v ? fmtN.format(v) : '') + '</td>';
+          }).join('') + '<td class="total">' + fmtN.format(f.total) + '</td></tr>';
+        }).join('') + '</tbody><tfoot><tr><td>TOTAL</td>' + totCol.map(function (v) { return '<td>' + fmtN.format(v) + '</td>'; }).join('') +
+        '<td>' + fmtN.format(gran) + '</td></tr></tfoot></table></div>';
+      var c = conclusion(filasM, tipoTxt);
+      if (c) html += '<p class="matriz-conclusion">' + c + '</p>';
+      return html + '</div>';
+    }
+    cont.innerHTML = tabla(R, 'RENUNCIAS', 'renuncias') + tabla(T, 'TERMINACIONES DE CONTRATO', 'terminaciones de contrato');
+    tablasTSV = tsv.join('\n');
+  }
+  document.getElementById('btnCopiarTablas').addEventListener('click', function () {
+    var btn = this;
+    if (!tablasTSV) return;
+    navigator.clipboard.writeText(tablasTSV).then(function () {
+      btn.textContent = 'Copiado: pégalo en Excel'; setTimeout(function () { btn.textContent = 'Copiar tablas'; }, 2200);
+    }, function () { btn.textContent = 'No se pudo copiar'; });
+  });
 
   // ---------- Arranque ----------
   function iniciar(datos) {

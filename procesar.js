@@ -204,6 +204,23 @@
   function idPeriodo(anio, mes) { return anio + '-' + String(mes).padStart(2, '0'); }
   function textoFecha(n) { var p = partesDeSerial(n); return p.dia + '/' + p.mes + '/' + p.anio; }
 
+  // Columna de la tabla "motivo de retiro por subproceso": los 5 subprocesos o, si no, la dirección
+  var COLUMNAS_SUB = { 'EMPAQUE': 'Empaque', 'MERCADEO MEDELLÍN': 'Mercadeo Medellín', 'MERCADEO BOGOTÁ': 'Mercadeo Bogotá', 'MERCADEO CALI': 'Mercadeo Cali', 'PISO 3': 'Piso 3' };
+  function columnaArea(sub, direccion) {
+    if (sub && COLUMNAS_SUB[sub]) return COLUMNAS_SUB[sub];
+    var d = encabezado(direccion);
+    if (!d) return 'Sin dato';
+    if (d.indexOf('OPERACION') === 0) return 'Operaciones';
+    if (d.indexOf('SISTEMA') === 0) return 'Sistema de gestión';
+    if (d.indexOf('MANTENIMIENTO') === 0) return 'Mantenimiento';
+    if (d.indexOf('INNOVACION') === 0 || d === 'I+D') return 'I+D';
+    if (d.indexOf('DESARROLLO HUMANO') === 0) return 'Desarrollo humano';
+    if (d.indexOf('PRODUCCION') === 0) return 'Producción (otros)';
+    if (d.indexOf('MERCADEO') === 0 || d.indexOf('VENTAS') === 0) return 'Mercadeo (otros)';
+    if (d.indexOf('ADMINISTRA') === 0) return 'Administrativo';
+    return textoLimpio(direccion);
+  }
+
   // Texto legible para motivos y causas: sin espacios raros, primera letra en mayúscula
   function textoLimpio(v) {
     if (v === null || v === undefined) return '';
@@ -354,7 +371,7 @@
             cMr = columna(e, 'MES DE RETIRO'), cAr = columna(e, 'ANO RETIRO'), cMot = columna(e, 'MOTIVO DE TERMINA'),
             cSub = columna(e, 'SUBPROCESO');
           if (cAr < 0) cAr = columna(e, 'ANO DE RETIRO');
-          var cGen = columna(e, 'MOTIVO GENERICO'), cCausa = columna(e, 'CAUSA DE LA TERMINACION');
+          var cGen = columna(e, 'MOTIVO GENERICO'), cCausa = columna(e, 'CAUSA DE LA TERMINACION'), cDir = columna(e, 'DIRECCION');
           var n = 0, meses = {}, filasArchivo = [], avisosArchivo = [];
           consol.filas.forEach(function (r, i) {
             if (r.every(function (v) { return v === null || v === ''; })) return;
@@ -379,8 +396,9 @@
               avisosArchivo.push(base + ' · fila ' + fila + ' (' + empresa + (sr !== null ? ', retiro ' + textoFecha(sr) : '') + '): sin fecha de ingreso, no entra en rotación temprana.');
             }
             var textoMotivo = encabezado(cMot >= 0 ? r[cMot] : '');
+            var subN = cSub >= 0 ? normalizarSubproceso(r[cSub]) : null;
             filasArchivo.push({ periodo: per, empresa: empresa, motivo: tipoMotivo(cMot >= 0 ? r[cMot] : ''), rt: rt, dias: diasPerm,
-              sub: cSub >= 0 ? normalizarSubproceso(r[cSub]) : null,
+              sub: subN, columna: columnaArea(subN, cDir >= 0 ? r[cDir] : ''),
               antecedentes: textoMotivo.indexOf('ANTECEDENTE') >= 0,
               motivoGen: cGen >= 0 ? textoLimpio(r[cGen]) : '', causa: cCausa >= 0 ? textoLimpio(r[cCausa]) : '' });
             meses[per] = true;
@@ -526,10 +544,19 @@
     // Motivos de renuncia y causas de terminación por mes (solo del consolidado)
     var retirosDetalle = {};
     retConsol.forEach(function (r) {
-      var d = retirosDetalle[r.periodo] || (retirosDetalle[r.periodo] = { antecedentes: 0, motivosRenuncia: {}, causasTerminacion: {} });
+      var d = retirosDetalle[r.periodo] || (retirosDetalle[r.periodo] = { antecedentes: 0, motivosRenuncia: {}, causasTerminacion: {}, porArea: { renuncias: {}, terminaciones: {} } });
       if (r.antecedentes) d.antecedentes++;
-      if (r.motivo === 'renuncias') { var mg = r.motivoGen || 'Sin dato'; d.motivosRenuncia[mg] = (d.motivosRenuncia[mg] || 0) + 1; }
-      if (r.motivo === 'terminaciones') { var ca = r.causa || 'Sin dato'; d.causasTerminacion[ca] = (d.causasTerminacion[ca] || 0) + 1; }
+      var col = r.columna || 'Sin dato', t;
+      if (r.motivo === 'renuncias') {
+        var mg = r.motivoGen || 'Sin dato';
+        d.motivosRenuncia[mg] = (d.motivosRenuncia[mg] || 0) + 1;
+        t = d.porArea.renuncias[mg] || (d.porArea.renuncias[mg] = {}); t[col] = (t[col] || 0) + 1;
+      }
+      if (r.motivo === 'terminaciones') {
+        var ca = r.causa || 'Sin dato';
+        d.causasTerminacion[ca] = (d.causasTerminacion[ca] || 0) + 1;
+        t = d.porArea.terminaciones[ca] || (d.porArea.terminaciones[ca] = {}); t[col] = (t[col] || 0) + 1;
+      }
     });
 
     var data = {
