@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Actualizar datos – Tablero Arepas Sary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root { --rojo:#C8001E; --rojo-oscuro:#A30018; --amarillo:#F5C400; --verde:#1E7C45; --crema:#F6F1E7; --tinta:#241C18; --gris:#6E6460; --linea:#E9E0D2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--crema); color: var(--tinta); font-family: "Nunito", "Trebuchet MS", system-ui, sans-serif; font-weight: 600; }
+  main { max-width: 860px; margin: 24px auto; padding: 0 18px 40px; }
+  h1 { font-weight: 900; font-size: 28px; margin: 0 0 6px; }
+  .intro { color: var(--gris); margin: 0 0 22px; line-height: 1.5; max-width: 66ch; }
+  .zona {
+    background: #fff; border: 3px dashed var(--rojo); border-radius: 18px; padding: 34px 20px; text-align: center;
+    transition: background-color .15s ease;
+  }
+  .zona.activa { background: #FFF7D6; border-style: solid; }
+  .zona p { margin: 0 0 16px; font-size: 18px; font-weight: 800; }
+  .zona small { display: block; margin-top: 14px; color: var(--gris); font-weight: 700; }
+  .boton {
+    font: inherit; font-weight: 800; font-size: 14px; cursor: pointer; border-radius: 10px; padding: 11px 18px; margin: 4px;
+    background: var(--rojo); color: #fff; border: 2px solid var(--rojo-oscuro); box-shadow: 0 2px 0 var(--rojo-oscuro);
+  }
+  .boton.secundario { background: #fff; color: var(--rojo); }
+  .boton.principal { background: var(--amarillo); color: var(--rojo); border-color: #D9A900; box-shadow: 0 2px 0 #D9A900; }
+  .boton:disabled { opacity: .45; cursor: not-allowed; }
+  .boton:focus-visible { outline: 3px solid var(--tinta); outline-offset: 2px; }
+  input[type=file] { display: none; }
+  .privacidad { margin: 14px 0 0; font-size: 13px; color: var(--gris); line-height: 1.5; }
+  .privacidad strong { color: var(--verde); }
+
+  #resultado { display: none; margin-top: 26px; }
+  .tarjeta { background: #fff; border-radius: 16px; box-shadow: 0 6px 16px rgba(110,70,40,.10); padding: 18px; margin-bottom: 16px; }
+  .tarjeta h2 { margin: 0 0 12px; font-size: 17px; font-weight: 900; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 14px; }
+  th { background: var(--rojo); color: #fff; font-weight: 900; padding: 8px 10px; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--linea); text-align: right; }
+  ul { margin: 0; padding-left: 20px; line-height: 1.55; font-size: 14px; }
+  .ok { color: var(--verde); }
+  .alerta li { color: #8A5A00; }
+  .acciones { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .pasos { margin: 10px 0 0; padding-left: 20px; line-height: 1.6; font-size: 14px; }
+  .estado { margin-top: 14px; font-weight: 800; }
+  .claves { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .claves label { display: block; font-size: 13px; font-weight: 800; margin-bottom: 4px; }
+  .claves input { font: inherit; width: 100%; padding: 10px 12px; border: 2px solid var(--linea); border-radius: 10px; font-size: 15px; }
+  .claves input:focus { outline: none; border-color: var(--rojo); }
+  .nota-clave { font-size: 13px; color: var(--gris); margin: 0 0 12px; line-height: 1.5; }
+  .error { color: var(--rojo); font-weight: 800; min-height: 18px; margin: 8px 0 0; }
+  .planta { width: 86px; font: inherit; font-weight: 800; text-align: right; padding: 6px 8px; border: 2px solid var(--linea); border-radius: 8px; }
+  .planta:focus { outline: none; border-color: var(--rojo); }
+  .planta.falta { border-color: var(--amarillo); background: #FFF7D6; }
+  .origen { display: block; font-size: 11px; color: var(--gris); margin-top: 3px; text-align: right; }
+  .origen button { font: inherit; font-weight: 800; color: var(--rojo); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+  .aviso-fila td { background: #FFF7D6; color: #8A5A00; font-size: 12.5px; text-align: left !important; padding-top: 4px; }
+  .fuente { font-size: 12px; color: var(--gris); }
+  @media (max-width: 600px) { .claves { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Actualizar datos del tablero</h1>
+  <p class="intro">Arrastra aquí la carpeta del año (por ejemplo <strong>2026</strong>) con las subcarpetas de los meses. Pon también dentro de esa carpeta el consolidado de retiros (<strong>INFO RETIROS INDICADOR</strong>) y el archivo de <strong>TOTAL EMPLEADOS</strong>.</p>
+  <p class="intro">De cada Excel mensual se toman los ingresos y la planta de personal. Los retiros salen del consolidado en todos los meses que contenga; los meses que no estén ahí se toman de la hoja RETIROS de la carpeta.</p>
+
+  <section class="zona" id="zona">
+    <p>Arrastra la carpeta o los archivos de Excel aquí</p>
+    <button class="boton" type="button" id="btnCarpeta">Elegir carpeta</button>
+    <button class="boton secundario" type="button" id="btnArchivos">Elegir archivos</button>
+    <input type="file" id="inCarpeta" webkitdirectory multiple>
+    <input type="file" id="inArchivos" accept=".xlsx,.xls" multiple>
+    <small>Se ignoran los archivos con “ANTERIOR” en el nombre y los temporales de Excel (~$).</small>
+    <div class="estado" id="estado" role="status" aria-live="polite"></div>
+  </section>
+
+  <p class="privacidad"><strong>Tus Excel no salen de este computador.</strong> Se procesan dentro del navegador y no se envían a ningún servidor. El data.json resultante solo contiene conteos por mes y empresa: ningún nombre, documento, cargo ni salario.</p>
+
+  <section id="resultado">
+    <div class="tarjeta">
+      <h2>Resumen por mes</h2>
+      <p class="nota-clave">La <strong>planta de personal</strong> (total de empleados del mes) se usa para el índice de rotación. Se toma del archivo de total de empleados y, si un mes no está ahí, de la hoja "Indicador de rotación" del Excel mensual. Si escribes un valor aquí, ese manda y se recuerda en este computador.</p>
+      <div style="overflow-x:auto"><table><thead><tr><th>Mes</th><th>Ingresos</th><th>Retiros</th><th>Rot. temprana</th><th>Planta</th><th>Índice de rotación</th></tr></thead><tbody id="tResumen"></tbody></table></div>
+    </div>
+
+    <div class="tarjeta">
+      <h2>Siguiente paso</h2>
+      <p class="nota-clave">El data.json se descarga cifrado: sin la contraseña nadie puede leer los números, aunque abra el archivo en GitHub. Usa siempre la misma contraseña para que quienes ya la tienen sigan entrando.</p>
+      <div class="claves">
+        <div><label for="clave1">Contraseña del tablero</label><input type="password" id="clave1" autocomplete="new-password"></div>
+        <div><label for="clave2">Repite la contraseña</label><input type="password" id="clave2" autocomplete="new-password"></div>
+      </div>
+      <div class="acciones">
+        <button class="boton principal" type="button" id="btnDescargar">Descargar data.json</button>
+        <button class="boton secundario" type="button" id="btnPrevia">Ver tablero con estos datos</button>
+      </div>
+      <p class="error" id="errorClave" role="alert"></p>
+      <ol class="pasos">
+        <li>Revisa que los números del resumen coincidan con lo que esperas.</li>
+        <li>Escribe la contraseña dos veces y descarga el data.json.</li>
+        <li>En GitHub, entra al repositorio, elige <em>Add file → Upload files</em>, arrastra el data.json y confirma con <em>Commit changes</em>. Reemplaza el anterior.</li>
+        <li>En uno o dos minutos el tablero publicado muestra los datos nuevos.</li>
+      </ol>
+    </div>
+
+    <div class="tarjeta">
+      <h2>Archivos leídos</h2>
+      <ul id="lUsados"></ul>
+      <div id="bloqueOmitidos" style="margin-top:12px"><strong>No se usaron:</strong><ul id="lOmitidos"></ul></div>
+    </div>
+
+    <div class="tarjeta" id="bloqueAvisos">
+      <h2>Revisa estas filas</h2>
+      <ul class="alerta" id="lAvisos"></ul>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="procesar.js"></script>
+<script src="cifrado.js"></script>
+<script>
+(function () {
+  'use strict';
+  var resultado = null;
+  var fmtN = new Intl.NumberFormat('es-CO');
+  var fmtP = new Intl.NumberFormat('es-CO', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  var zona = document.getElementById('zona');
+  var estado = document.getElementById('estado');
+
+  document.getElementById('btnCarpeta').onclick = function () { document.getElementById('inCarpeta').click(); };
+  document.getElementById('btnArchivos').onclick = function () { document.getElementById('inArchivos').click(); };
+  document.getElementById('inCarpeta').onchange = function (e) { leerLista(Array.prototype.slice.call(e.target.files)); };
+  document.getElementById('inArchivos').onchange = function (e) { leerLista(Array.prototype.slice.call(e.target.files)); };
+
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    zona.addEventListener(ev, function (e) { e.preventDefault(); zona.classList.add('activa'); });
+  });
+  zona.addEventListener('dragleave', function () { zona.classList.remove('activa'); });
+  zona.addEventListener('drop', function (e) {
+    e.preventDefault();
+    zona.classList.remove('activa');
+    var items = Array.prototype.slice.call(e.dataTransfer.items || []);
+    var entradas = items.map(function (it) { return it.webkitGetAsEntry ? it.webkitGetAsEntry() : null; }).filter(Boolean);
+    if (entradas.length) {
+      estado.textContent = 'Buscando archivos…';
+      Promise.all(entradas.map(function (en) { return recorrer(en, ''); }))
+        .then(function (listas) { leerLista([].concat.apply([], listas)); });
+    } else {
+      leerLista(Array.prototype.slice.call(e.dataTransfer.files));
+    }
+  });
+
+  // Recorre carpetas arrastradas
+  function recorrer(entrada, ruta) {
+    return new Promise(function (ok) {
+      if (entrada.isFile) {
+        entrada.file(function (f) { f._ruta = ruta + f.name; ok([f]); }, function () { ok([]); });
+      } else if (entrada.isDirectory) {
+        var lector = entrada.createReader(), todas = [];
+        (function leer() {
+          lector.readEntries(function (lote) {
+            if (!lote.length) {
+              Promise.all(todas.map(function (h) { return recorrer(h, ruta + entrada.name + '/'); }))
+                .then(function (l) { ok([].concat.apply([], l)); });
+            } else { todas = todas.concat(Array.prototype.slice.call(lote)); leer(); }
+          }, function () { ok([]); });
+        })();
+      } else ok([]);
+    });
+  }
+
+  function leerLista(archivos) {
+    var excel = archivos.filter(function (f) { return /\.xlsx?$/i.test(f.name); });
+    if (!excel.length) { estado.textContent = 'No se encontraron archivos de Excel. Revisa que arrastraste la carpeta correcta.'; return; }
+    estado.textContent = 'Leyendo ' + excel.length + ' archivo(s)…';
+    Promise.all(excel.map(function (f) {
+      return f.arrayBuffer().then(function (buf) {
+        return { nombre: f._ruta || f.webkitRelativePath || f.name, datos: new Uint8Array(buf), fecha: f.lastModified || 0 };
+      });
+    })).then(function (lista) {
+      setTimeout(function () {
+        try {
+          resultado = ProcesarSary.procesar(XLSX, lista);
+          mostrar(resultado);
+          estado.innerHTML = '<span class="ok">Listo: ' + resultado.usados.length + ' archivo(s) procesados.</span>';
+        } catch (err) {
+          estado.textContent = 'No se pudo procesar: ' + err.message;
+        }
+      }, 20);
+    });
+  }
+
+  // ---------- Planta de personal ----------
+  function plantaManual() { try { return JSON.parse(localStorage.getItem('sary-planta') || '{}'); } catch (e) { return {}; } }
+  function guardarManual(m) { try { localStorage.setItem('sary-planta', JSON.stringify(m)); } catch (e) {} }
+  function valorPlanta(id) {
+    var m = plantaManual();
+    if (m[id]) return { valor: m[id], manual: true };
+    var det = resultado.planta[id];
+    return det ? { valor: det.valor, manual: false } : { valor: null, manual: false };
+  }
+  function totales(id) {
+    var f = resultado.data.datos.filter(function (x) { return x.periodo === id; });
+    var s = function (c) { return f.reduce(function (a, x) { return a + (x[c] || 0); }, 0); };
+    return { ing: s('ingresos'), ret: s('retiros'), rt: s('rotTemprana') };
+  }
+
+  function mostrar(r) {
+    var d = r.data;
+    var cuerpo = document.getElementById('tResumen');
+    cuerpo.innerHTML = d.periodos.map(function (p) {
+      var t = totales(p.id), v = valorPlanta(p.id), det = r.planta[p.id];
+      var origen = v.manual ? 'Escrita por ti' + (det ? ' · <button type="button" data-reset="' + p.id + '">usar la del ' + (/Archivo/.test(det.origen) ? 'archivo' : 'Excel') + ' (' + fmtN.format(det.valor) + ')</button>' : '')
+        : det ? det.origen : 'Falta: escríbela';
+      var fila = '<tr><td>' + p.nombre + ' ' + p.anio + '<span class="fuente"><br>Retiros: ' + (p.fuenteRetiros === 'consolidado' ? 'consolidado' : 'carpeta') + '</span></td>' +
+        '<td>' + (p.tieneIngresos ? fmtN.format(t.ing) : '<span class="fuente">Pendiente</span>') + '</td>' +
+        '<td>' + fmtN.format(t.ret) + '</td>' +
+        '<td>' + fmtN.format(t.rt) + ' <span class="fuente">(' + fmtP.format(t.ret ? t.rt / t.ret : 0) + ')</span></td>' +
+        '<td><input class="planta' + (v.valor ? '' : ' falta') + '" type="number" min="1" step="1" inputmode="numeric" data-id="' + p.id + '" value="' + (v.valor || '') + '" aria-label="Planta de ' + p.nombre + '">' +
+        '<span class="origen">' + origen + '</span></td>' +
+        '<td data-indice="' + p.id + '">' + (v.valor ? fmtP.format(t.ret / v.valor) : '–') + '</td></tr>';
+      if (det && det.aviso && !v.manual) fila += '<tr class="aviso-fila"><td colspan="6">' + escapar(det.aviso) + '</td></tr>';
+      return fila;
+    }).join('');
+
+    cuerpo.querySelectorAll('input.planta').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        var id = inp.dataset.id, n = parseInt(inp.value, 10), m = plantaManual();
+        var det = resultado.planta[id];
+        if (n > 0 && !(det && det.valor === n)) m[id] = n; else delete m[id];
+        guardarManual(m);
+        inp.classList.toggle('falta', !(n > 0));
+        var t = totales(id);
+        cuerpo.querySelector('[data-indice="' + id + '"]').textContent = n > 0 ? fmtP.format(t.ret / n) : '–';
+      });
+      inp.addEventListener('change', function () { mostrar(resultado); });
+    });
+    cuerpo.querySelectorAll('button[data-reset]').forEach(function (b) {
+      b.onclick = function () { var m = plantaManual(); delete m[b.dataset.reset]; guardarManual(m); mostrar(resultado); };
+    });
+
+    document.getElementById('lUsados').innerHTML = r.usados.map(function (u) {
+      var meses = (u.meses || []).map(function (id) { var p = d.periodos.filter(function (x) { return x.id === id; })[0]; return p ? p.nombre.toLowerCase() : id; }).join(' y ');
+      if (u.tipo === 'planta') return '<li><strong>' + escapar(u.archivo) + '</strong>: total de empleados de ' + (u.meses || []).length + ' mes(es). Tiene prioridad sobre la hoja "Indicador de rotación" de cada Excel.</li>';
+      if (u.tipo === 'consolidado') return '<li><strong>' + escapar(u.archivo) + '</strong>: consolidado de retiros, ' + u.retiros + ' retiros (' + meses + '). Reemplaza los retiros de la carpeta en esos meses.</li>';
+      return '<li>' + escapar(u.archivo) + ': ' + u.ingresos + ' ingresos, ' + u.retiros + ' retiros</li>';
+    }).join('');
+    document.getElementById('lOmitidos').innerHTML = r.omitidos.map(function (o) { return '<li>' + escapar(o) + '</li>'; }).join('');
+    document.getElementById('bloqueOmitidos').style.display = r.omitidos.length ? '' : 'none';
+    document.getElementById('lAvisos').innerHTML = r.avisos.map(function (a) { return '<li>' + escapar(a) + '</li>'; }).join('');
+    document.getElementById('bloqueAvisos').style.display = r.avisos.length ? '' : 'none';
+    document.getElementById('resultado').style.display = 'block';
+  }
+
+  // Copia de los datos con la planta que quedó en la tabla
+  function conPlanta() {
+    var d = JSON.parse(JSON.stringify(resultado.data));
+    d.periodos.forEach(function (p) { p.planta = valorPlanta(p.id).valor; });
+    return d;
+  }
+
+  function escapar(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  document.getElementById('btnDescargar').onclick = function () {
+    if (!resultado) return;
+    var c1 = document.getElementById('clave1').value, c2 = document.getElementById('clave2').value;
+    var err = document.getElementById('errorClave');
+    err.textContent = '';
+    if (!c1) { err.textContent = 'Escribe la contraseña.'; return; }
+    if (c1 !== c2) { err.textContent = 'Las dos contraseñas no coinciden.'; return; }
+    var btn = this;
+    btn.disabled = true; btn.textContent = 'Cifrando…';
+    CifradoSary.cifrar(conPlanta(), c1).then(function (paquete) {
+      descargar(paquete);
+      btn.disabled = false; btn.textContent = 'Descargar data.json';
+    }, function (e) {
+      err.textContent = 'No se pudo cifrar: ' + e.message + '. Abre esta página desde el enlace https de GitHub Pages.';
+      btn.disabled = false; btn.textContent = 'Descargar data.json';
+    });
+  };
+
+  function descargar(contenido) {
+    var blob = new Blob([JSON.stringify(contenido)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'data.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  }
+
+  document.getElementById('btnPrevia').onclick = function () {
+    if (!resultado) return;
+    try {
+      localStorage.setItem('sary-vista-previa', JSON.stringify(conPlanta()));
+      window.open('index.html?vista-previa', '_blank');
+    } catch (e) {
+      alert('El navegador no permitió guardar la vista previa. Descarga el data.json y arrástralo sobre el tablero.');
+    }
+  };
+})();
+</script>
+</body>
+</html>

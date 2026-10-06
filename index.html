@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestión y rotación de personal – Arepas Sary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rojo: #C8001E;
+    --rojo-oscuro: #A30018;
+    --amarillo: #F5C400;
+    --vino: #8B0012;
+    --naranja: #F5A200;
+    --verde: #1E7C45;
+    --crema: #F6F1E7;
+    --tinta: #241C18;
+    --gris: #6E6460;
+    --linea: #E9E0D2;
+    --blanco: #FFFFFF;
+    --radio-marco: 22px;
+    --radio-tarjeta: 16px;
+    --sombra: 0 6px 16px rgba(110, 70, 40, 0.10), 0 1px 3px rgba(110, 70, 40, 0.08);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    background: var(--crema);
+    color: var(--tinta);
+    font-family: "Nunito", "Trebuchet MS", system-ui, sans-serif;
+    font-weight: 600;
+    -webkit-font-smoothing: antialiased;
+  }
+  .marco {
+    max-width: 1440px;
+    margin: 16px auto;
+    padding: 22px 24px 18px;
+    border: 3px solid var(--rojo);
+    border-radius: var(--radio-marco);
+    background: var(--crema);
+  }
+
+  /* ---------- Encabezado ---------- */
+  .encabezado {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 16px;
+  }
+  .logo { height: 96px; width: auto; display: block; }
+  .logo-texto {
+    display: none;
+    background: var(--rojo);
+    color: var(--blanco);
+    font-weight: 900;
+    font-size: 22px;
+    padding: 10px 16px;
+    border-radius: 14px;
+    border-top: 8px solid var(--amarillo);
+    letter-spacing: 0.02em;
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(18px, 2vw, 26px);
+    line-height: 1.15;
+    font-weight: 900;
+    letter-spacing: 0.01em;
+  }
+  .subtitulo { margin: 4px 0 0; color: var(--gris); font-size: 14px; font-weight: 700; }
+
+  /* ---------- Rejilla ---------- */
+  .rejilla {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .tarjeta {
+    background: var(--blanco);
+    border-radius: var(--radio-tarjeta);
+    box-shadow: var(--sombra);
+    padding: 14px 16px;
+    min-width: 0;
+  }
+  .tarjeta h2 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 900;
+    text-align: center;
+    letter-spacing: 0.01em;
+  }
+  .span-12 { grid-column: span 12; }
+  .span-6 { grid-column: span 6; }
+  .span-7 { grid-column: span 7; }
+  .span-5 { grid-column: span 5; }
+  .span-4 { grid-column: span 4; }
+  .span-3 { grid-column: span 3; }
+
+  /* ---------- Selector de mes ---------- */
+  .selector h2 { text-align: left; font-size: 13px; margin-bottom: 10px; }
+  .meses { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mes {
+    font: inherit;
+    font-weight: 800;
+    font-size: 13px;
+    border: 2px solid var(--rojo-oscuro);
+    background: var(--rojo);
+    color: var(--blanco);
+    border-radius: 10px;
+    padding: 9px 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 0 var(--rojo-oscuro);
+    transition: transform .08s ease, background-color .15s ease;
+  }
+  .mes:hover { background: var(--rojo-oscuro); }
+  .mes:active { transform: translateY(1px); box-shadow: none; }
+  .mes[aria-pressed="true"] {
+    background: var(--amarillo);
+    color: var(--rojo);
+    border-color: #D9A900;
+    box-shadow: 0 2px 0 #D9A900;
+  }
+  .mes.anio { background: var(--blanco); color: var(--rojo); }
+  .mes.anio[aria-pressed="true"] { background: var(--amarillo); }
+  button:focus-visible { outline: 3px solid var(--tinta); outline-offset: 2px; }
+
+  /* ---------- KPI ---------- */
+  .kpis {
+    grid-column: span 7;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .kpi { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 118px; }
+  .kpi .valor {
+    font-size: clamp(30px, 3.2vw, 44px);
+    font-weight: 900;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .kpi .etiqueta { margin-top: 8px; font-size: 13px; font-weight: 900; line-height: 1.2; }
+  .kpi .nota { margin-top: 6px; font-size: 12px; color: var(--gris); font-weight: 700; min-height: 15px; }
+  .flecha { font-size: 0.55em; }
+  .sube { color: var(--rojo); }
+  .baja { color: var(--verde); }
+  .neutro { color: var(--gris); }
+
+  .variacion { min-height: 0; flex: 1; }
+  .variaciones { grid-column: span 3; display: grid; grid-template-rows: 1fr 1fr; gap: 16px; }
+
+  /* ---------- Gráficos ---------- */
+  .leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; margin: 2px 0 6px; font-size: 12px; font-weight: 800; }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .leyenda i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .lienzo { position: relative; height: 230px; }
+  .lienzo.bajo { height: 210px; }
+  .vacio { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--gris); font-size: 14px; text-align: center; padding: 20px; }
+
+  /* ---------- Índice de rotación ---------- */
+  .mini { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 4px 0 8px; }
+  .mini div { background: #FBF7EF; border-radius: 10px; padding: 8px 10px; text-align: center; }
+  .mini b { display: block; font-size: 22px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .mini > div > span { display: block; font-size: 11px; font-weight: 800; color: var(--gris); margin-top: 3px; line-height: 1.2; }
+  .nota-grafico { font-size: 12px; color: var(--gris); text-align: center; margin: 6px 0 0; min-height: 15px; }
+  .lienzo.alto { height: 250px; }
+
+  /* ---------- Tabla ---------- */
+  .tabla-envoltura { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  thead th { background: var(--rojo); color: var(--blanco); font-weight: 900; padding: 7px 6px; text-align: right; line-height: 1.15; vertical-align: bottom; }
+  thead th:first-child { text-align: left; border-top-left-radius: 8px; }
+  thead th:last-child { border-top-right-radius: 8px; }
+  tbody td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--linea); }
+  tbody td:first-child { text-align: left; font-weight: 800; white-space: nowrap; }
+  tbody tr:nth-child(even) td { background: #FBF7EF; }
+  tfoot td { padding: 8px 6px; text-align: right; font-weight: 900; border-top: 2px solid var(--rojo); }
+  tfoot td:first-child { text-align: left; }
+  .punto { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; }
+
+  .pie { margin-top: 14px; font-size: 12px; color: var(--gris); font-weight: 700; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+  /* ---------- Estado sin datos ---------- */
+  .aviso-carga {
+    display: none;
+    margin: 40px auto; max-width: 560px; text-align: center;
+    background: var(--blanco); border: 3px dashed var(--rojo); border-radius: var(--radio-tarjeta); padding: 28px;
+  }
+  .aviso-carga h2 { margin-top: 0; }
+  .aviso-carga.arrastrando { background: #FFF7D6; }
+
+  /* ---------- Acceso con contraseña ---------- */
+  .acceso { max-width: 420px; margin: 50px auto 30px; background: var(--blanco); border-radius: var(--radio-tarjeta); box-shadow: var(--sombra); padding: 26px; text-align: center; }
+  .acceso h2 { margin: 0 0 6px; font-weight: 900; font-size: 20px; }
+  .acceso p { margin: 0 0 16px; color: var(--gris); font-size: 14px; }
+  .acceso input { font: inherit; width: 100%; padding: 11px 12px; border: 2px solid var(--linea); border-radius: 10px; margin-bottom: 12px; font-size: 16px; }
+  .acceso input:focus { outline: none; border-color: var(--rojo); }
+  .acceso .error { color: var(--rojo); font-weight: 800; margin: 10px 0 0; min-height: 18px; }
+  .bloquear { font: inherit; font-weight: 800; color: var(--rojo); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1180px) {
+    .kpis { grid-column: span 12; }
+    .selector { grid-column: span 12; }
+    .span-5, .span-4 { grid-column: span 6; }
+    .span-7 { grid-column: span 12; }
+    .span-5.sub { grid-column: span 12; }
+    .variaciones { grid-column: span 12; grid-template-columns: 1fr 1fr; grid-template-rows: none; }
+    .span-3 { grid-column: span 6; }
+  }
+  @media (max-width: 760px) {
+    .marco { margin: 0; border-radius: 0; border-width: 0 0 0 0; padding: 14px; }
+    .encabezado { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .span-7, .span-6, .span-5, .span-4, .span-3, .span-5.sub { grid-column: span 12; }
+    .mini { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .variaciones { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main class="marco">
+  <header class="encabezado">
+    <div>
+      <img class="logo" src="logo.png" alt="Arepas Sary" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';">
+      <span class="logo-texto" aria-hidden="true">AREPAS SARY</span>
+    </div>
+    <div>
+      <h1>INFORME CORPORATIVO MENSUAL DE GESTIÓN Y ROTACIÓN – AREPAS SARY</h1>
+      <p class="subtitulo" id="subtitulo">Cargando datos…</p>
+    </div>
+  </header>
+
+  <section class="aviso-carga" id="avisoCarga">
+    <h2>No se pudo leer data.json</h2>
+    <p>Si abriste este archivo directamente desde tu computador, el navegador bloquea la lectura. Arrastra aquí el archivo <strong>data.json</strong> para verlo, o ábrelo desde el enlace de GitHub Pages.</p>
+  </section>
+
+  <section class="acceso" id="acceso" hidden>
+    <form id="formAcceso">
+      <h2>Tablero protegido</h2>
+      <p>Escribe la contraseña para ver los indicadores.</p>
+      <input type="password" id="clave" autocomplete="current-password" aria-label="Contraseña" required>
+      <button class="mes" type="submit" id="btnEntrar">Ver tablero</button>
+      <p class="error" id="errorClave" role="alert"></p>
+    </form>
+  </section>
+
+  <div class="rejilla" id="tablero" hidden>
+    <!-- Fila 1 -->
+    <section class="tarjeta selector span-5" aria-label="Selección de mes">
+      <h2>SELECCIONAR MES</h2>
+      <div class="meses" id="meses"></div>
+    </section>
+
+    <div class="kpis">
+      <article class="tarjeta kpi"><div class="valor" id="kIng">–</div><div class="etiqueta" id="kIngEt">INGRESOS</div><div class="nota" id="kIngNota"></div></article>
+      <article class="tarjeta kpi"><div class="valor" id="kIngAnt">–</div><div class="etiqueta" id="kIngAntEt">INGRESOS MES ANTERIOR</div><div class="nota"></div></article>
+      <article class="tarjeta kpi"><div class="valor" id="kRet">–</div><div class="etiqueta" id="kRetEt">RETIROS</div><div class="nota" id="kRetNota"></div></article>
+      <article class="tarjeta kpi"><div class="valor" id="kRetAnt">–</div><div class="etiqueta" id="kRetAntEt">RETIROS MES ANTERIOR</div><div class="nota"></div></article>
+    </div>
+
+    <!-- Fila 2 -->
+    <section class="tarjeta span-5">
+      <h2>EVOLUCIÓN DE INGRESOS VS RETIROS POR MES</h2>
+      <div class="leyenda"><span><i style="background:var(--amarillo)"></i>INGRESOS</span><span><i style="background:var(--rojo)"></i>RETIROS</span></div>
+      <div class="lienzo"><canvas id="gEvolucion" aria-label="Ingresos y retiros por mes"></canvas></div>
+    </section>
+
+    <section class="tarjeta span-4">
+      <h2>CANTIDAD Y % DE ROTACIÓN TEMPRANA POR MES</h2>
+      <div class="leyenda"><span><i style="background:var(--amarillo)"></i>CANTIDAD</span><span><i style="background:var(--rojo)"></i>% SOBRE RETIROS</span></div>
+      <div class="lienzo"><canvas id="gRotacion" aria-label="Rotación temprana por mes"></canvas></div>
+    </section>
+
+    <div class="variaciones">
+      <article class="tarjeta kpi variacion"><div class="valor" id="vAbs">–</div><div class="etiqueta" id="vAbsEt">RETIROS VS MES ANTERIOR</div></article>
+      <article class="tarjeta kpi variacion"><div class="valor" id="vPct">–</div><div class="etiqueta" id="vPctEt">% VAR. RETIROS VS MES ANTERIOR</div></article>
+    </div>
+
+    <!-- Fila 3 -->
+    <section class="tarjeta span-3">
+      <h2 id="tIng">INGRESOS POR TEMPORAL</h2>
+      <div class="leyenda" id="lIng"></div>
+      <div class="lienzo bajo"><canvas id="gIng"></canvas><div class="vacio" id="eIng">Sin ingresos en este periodo.</div></div>
+    </section>
+    <section class="tarjeta span-3">
+      <h2 id="tRet">RETIROS POR TEMPORAL</h2>
+      <div class="leyenda" id="lRet"></div>
+      <div class="lienzo bajo"><canvas id="gRet"></canvas><div class="vacio" id="eRet">Sin retiros en este periodo.</div></div>
+    </section>
+    <section class="tarjeta span-3">
+      <h2 id="tRot">ROTACIÓN TEMPRANA POR TEMPORAL</h2>
+      <div class="leyenda" id="lRot"></div>
+      <div class="lienzo bajo"><canvas id="gRot"></canvas><div class="vacio" id="eRot">Sin rotación temprana en este periodo.</div></div>
+    </section>
+    <section class="tarjeta span-3">
+      <h2>DETALLE DE ROTACIÓN TEMPRANA</h2>
+      <div class="tabla-envoltura">
+        <table>
+          <thead><tr><th>Empresa</th><th>Rot. temprana</th><th id="thAcum">Acum. año</th><th>%</th></tr></thead>
+          <tbody id="tablaCuerpo"></tbody>
+          <tfoot id="tablaPie"></tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Fila 4 -->
+    <section class="tarjeta span-7">
+      <h2>ÍNDICE DE ROTACIÓN MENSUAL</h2>
+      <div class="mini" id="miniIndice"></div>
+      <div class="leyenda"><span><i style="background:var(--rojo)"></i>ÍNDICE TOTAL</span><span><i style="background:var(--amarillo)"></i>VOLUNTARIO (RENUNCIAS)</span><span><i style="background:var(--gris);border-radius:2px;height:3px;width:16px"></i>PROMEDIO DEL AÑO</span></div>
+      <div class="lienzo alto"><canvas id="gIndice" aria-label="Índice de rotación por mes"></canvas><div class="vacio" id="eIndice">Aún no hay planta de personal registrada para calcular el índice.</div></div>
+      <p class="nota-grafico" id="notaIndice"></p>
+    </section>
+    <section class="tarjeta span-5 sub">
+      <h2 id="tSub">RETIROS POR SUBPROCESO</h2>
+      <div class="leyenda"><span><i style="background:var(--amarillo)"></i>RENUNCIAS</span><span><i style="background:var(--rojo)"></i>TERMINACIONES</span></div>
+      <div class="lienzo alto"><canvas id="gSub" aria-label="Retiros por subproceso"></canvas><div class="vacio" id="eSub"></div></div>
+      <p class="nota-grafico" id="notaSub"></p>
+    </section>
+  </div>
+
+  <footer class="pie" id="pie"></footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="cifrado.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ---------- Configuración visual ----------
+  var C = { rojo: '#C8001E', amarillo: '#F5C400', vino: '#8B0012', naranja: '#F5A200', verde: '#1E7C45', tinta: '#241C18', gris: '#6E6460', linea: '#EFE7DA' };
+  var COLOR_EMPRESA = { 'GI GROUP': C.rojo, 'MISION': C.amarillo, 'SARY': C.vino, 'COMPLEMENTOS': C.naranja };
+  var EXTRA = ['#5C4B44', '#D9774B', '#9C8F86', '#3E6B8A'];
+  function colorEmpresa(e, i) { return COLOR_EMPRESA[e] || EXTRA[i % EXTRA.length]; }
+
+  var fmtN = new Intl.NumberFormat('es-CO');
+  var fmtP = new Intl.NumberFormat('es-CO', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+  Chart.register(ChartDataLabels);
+  Chart.defaults.font.family = '"Nunito", "Trebuchet MS", sans-serif';
+  Chart.defaults.font.weight = '700';
+  Chart.defaults.color = C.gris;
+  Chart.defaults.plugins.legend.display = false;
+  Chart.defaults.plugins.tooltip.titleFont = { weight: '800' };
+
+  var D = null;          // datos cargados
+  var sel = null;        // id del periodo seleccionado o 'ANIO'
+  var graficos = {};
+  var protegido = false; // true si los datos llegaron cifrados
+
+  // ---------- Utilidades de datos ----------
+  function filas(periodo) { return D.datos.filter(function (d) { return d.periodo === periodo; }); }
+  function suma(arr, campo) { return arr.reduce(function (s, d) { return s + (d[campo] || 0); }, 0); }
+  function totalPeriodo(periodo, campo) { return suma(filas(periodo), campo); }
+  function indicePeriodo(id) { return D.periodos.findIndex(function (p) { return p.id === id; }); }
+  function variosAnios() { return new Set(D.periodos.map(function (p) { return p.anio; })).size > 1; }
+  function nombrePeriodo(p) { return variosAnios() ? p.nombre + ' ' + p.anio : p.nombre; }
+  function porEmpresa(lista, campo) {
+    var o = {};
+    lista.forEach(function (d) { o[d.empresa] = (o[d.empresa] || 0) + (d[campo] || 0); });
+    return o;
+  }
+  function periodo(id) { return D.periodos[indicePeriodo(id)]; }
+  function conIngresos(p) { return p.tieneIngresos !== false; }
+  function periodosDelAnio(a) { return D.periodos.filter(function (p) { return p.anio === a; }); }
+  function anioSeleccionado() {
+    if (sel === 'ANIO') return D.periodos[D.periodos.length - 1].anio;
+    return D.periodos[indicePeriodo(sel)].anio;
+  }
+  function filasAnio() {
+    var a = anioSeleccionado();
+    return D.datos.filter(function (d) { return Number(d.periodo.slice(0, 4)) === a; });
+  }
+
+  // ---------- Selector ----------
+  function pintarSelector() {
+    var cont = document.getElementById('meses');
+    cont.innerHTML = '';
+    D.periodos.forEach(function (p) {
+      cont.appendChild(boton(p.id, nombrePeriodo(p), ''));
+    });
+    cont.appendChild(boton('ANIO', 'TODO EL AÑO', 'anio'));
+    function boton(id, texto, clase) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mes ' + clase;
+      b.textContent = texto;
+      b.dataset.id = id;
+      b.setAttribute('aria-pressed', String(id === sel));
+      b.addEventListener('click', function () { seleccionar(id); });
+      return b;
+    }
+  }
+
+  function seleccionar(id) {
+    sel = id;
+    document.querySelectorAll('.mes').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.id === sel)); });
+    pintarKpis();
+    pintarBarras();
+    pintarTabla();
+    pintarIndice();
+    pintarSubprocesos();
+    graficos.evolucion.update('none');
+    graficos.rotacion.update('none');
+    graficos.indice.update('none');
+  }
+
+  // ---------- KPI ----------
+  function poner(id, html) { document.getElementById(id).innerHTML = html; }
+
+  function pintarKpis() {
+    if (sel === 'ANIO') {
+      var a = anioSeleccionado();
+      var fa = filasAnio();
+      var mesesIng = periodosDelAnio(a).filter(conIngresos).length || 1;
+      var mesesRet = periodosDelAnio(a).length || 1;
+      poner('kIng', fmtN.format(suma(fa, 'ingresos'))); poner('kIngEt', 'INGRESOS ' + a); poner('kIngNota', '');
+      poner('kIngAnt', fmtN.format(Math.round(suma(fa, 'ingresos') / mesesIng))); poner('kIngAntEt', 'PROMEDIO DE INGRESOS POR MES');
+      poner('kRet', fmtN.format(suma(fa, 'retiros'))); poner('kRetEt', 'RETIROS ' + a); poner('kRetNota', '');
+      poner('kRetAnt', fmtN.format(Math.round(suma(fa, 'retiros') / mesesRet))); poner('kRetAntEt', 'PROMEDIO DE RETIROS POR MES');
+      poner('vAbs', '<span class="neutro">–</span>'); poner('vAbsEt', '<span class="neutro">ELIGE UN MES PARA COMPARAR</span>');
+      poner('vPct', '<span class="neutro">–</span>'); poner('vPctEt', '<span class="neutro">ELIGE UN MES PARA COMPARAR</span>');
+      return;
+    }
+    var i = indicePeriodo(sel);
+    var p = D.periodos[i];
+    var ant = i > 0 ? D.periodos[i - 1] : null;
+    var ing = totalPeriodo(p.id, 'ingresos');
+    var ret = totalPeriodo(p.id, 'retiros');
+
+    poner('kIng', conIngresos(p) ? fmtN.format(ing) : '<span class="neutro">–</span>'); poner('kIngEt', 'INGRESOS ' + nombrePeriodo(p));
+    poner('kRet', fmtN.format(ret)); poner('kRetEt', 'RETIROS ' + nombrePeriodo(p));
+
+    if (!ant) {
+      ['kIngAnt', 'kRetAnt', 'vAbs', 'vPct'].forEach(function (k) { poner(k, '<span class="neutro">–</span>'); });
+      poner('kIngAntEt', 'INGRESOS MES ANTERIOR'); poner('kRetAntEt', 'RETIROS MES ANTERIOR');
+      poner('kIngNota', conIngresos(p) ? '' : 'Pendiente de cargar'); poner('kRetNota', '');
+      poner('vAbsEt', '<span class="neutro">PRIMER MES CON DATOS</span>');
+      poner('vPctEt', '<span class="neutro">PRIMER MES CON DATOS</span>');
+      return;
+    }
+    var nAnt = nombrePeriodo(ant);
+    var ingA = totalPeriodo(ant.id, 'ingresos');
+    var retA = totalPeriodo(ant.id, 'retiros');
+    poner('kIngAnt', conIngresos(ant) ? fmtN.format(ingA) : '<span class="neutro">–</span>'); poner('kIngAntEt', 'INGRESOS ' + nAnt);
+    poner('kRetAnt', fmtN.format(retA)); poner('kRetAntEt', 'RETIROS ' + nAnt);
+
+    var dIng = ing - ingA;
+    if (!conIngresos(p)) poner('kIngNota', 'Pendiente de cargar');
+    else if (!conIngresos(ant)) poner('kIngNota', '');
+    else poner('kIngNota', dIng === 0 ? 'Igual que ' + cap(nAnt)
+      : (dIng > 0 ? '▲ ' : '▼ ') + fmtN.format(Math.abs(dIng)) + ' vs ' + cap(nAnt));
+
+    var dRet = ret - retA;
+    var claseRet = dRet > 0 ? 'sube' : dRet < 0 ? 'baja' : 'neutro';
+    poner('kRetNota', dRet === 0 ? 'Igual que ' + cap(nAnt)
+      : '<span class="' + claseRet + '">' + (dRet > 0 ? '▲ ' : '▼ ') + fmtN.format(Math.abs(dRet)) + '</span> vs ' + cap(nAnt));
+
+    if (dRet === 0) {
+      poner('vAbs', '<span class="neutro">0</span>');
+      poner('vAbsEt', '<span class="neutro">MISMOS RETIROS QUE ' + nAnt + '</span>');
+    } else {
+      poner('vAbs', '<span class="' + claseRet + '">' + fmtN.format(Math.abs(dRet)) + '</span>');
+      poner('vAbsEt', '<span class="' + claseRet + '">' + (dRet < 0 ? 'RETIROS MENOS' : 'RETIROS MÁS') + ' QUE ' + nAnt + '</span>');
+    }
+    if (retA === 0) {
+      poner('vPct', '<span class="neutro">–</span>');
+      poner('vPctEt', '<span class="neutro">' + nAnt + ' NO TUVO RETIROS</span>');
+    } else {
+      var pct = dRet / retA;
+      poner('vPct', '<span class="' + claseRet + '">' + fmtP.format(Math.abs(pct)) + '</span>');
+      poner('vPctEt', '<span class="' + claseRet + '">' + (dRet < 0 ? '% DE DISMINUCIÓN DE RETIROS VS ' : dRet > 0 ? '% DE AUMENTO DE RETIROS VS ' : 'SIN VARIACIÓN VS ') + nAnt + '</span>');
+    }
+  }
+  function cap(t) { return t.charAt(0) + t.slice(1).toLowerCase(); }
+
+  // ---------- Gráficos de línea (estáticos, resaltan el mes elegido) ----------
+  var resaltarMes = {
+    id: 'resaltarMes',
+    beforeDatasetsDraw: function (chart) {
+      if (sel === 'ANIO' || sel === null) return;
+      var i = indicePeriodo(sel);
+      var x = chart.scales.x;
+      if (i < 0 || !x) return;
+      var paso = D.periodos.length > 1 ? (x.getPixelForValue(1) - x.getPixelForValue(0)) : x.width;
+      var centro = x.getPixelForValue(i);
+      var ctx = chart.ctx, area = chart.chartArea;
+      ctx.save();
+      ctx.fillStyle = 'rgba(245, 196, 0, 0.18)';
+      ctx.fillRect(centro - paso / 2, area.top, paso, area.bottom - area.top);
+      ctx.restore();
+    }
+  };
+
+  function ejeX() {
+    return { grid: { display: false }, border: { display: false }, offset: true, ticks: { color: C.tinta, font: { weight: '800', size: 11 }, maxRotation: 0, autoSkip: false,
+      callback: function (v) { var l = this.getLabelForValue(v); return (this.width / Math.max(1, this.ticks.length)) < 68 ? l.slice(0, 3) : l; } } };
+  }
+  function ejeY(extra) {
+    return Object.assign({ beginAtZero: false, grace: '18%', grid: { color: C.linea }, border: { display: false }, ticks: { maxTicksLimit: 4, font: { size: 11 } } }, extra || {});
+  }
+  function clicEnMes(evt, elementos, chart) {
+    var pts = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, false);
+    if (pts.length) seleccionar(D.periodos[pts[0].index].id);
+  }
+
+  function crearLineas() {
+    var etiquetas = D.periodos.map(nombrePeriodo);
+    var ing = D.periodos.map(function (p) { return conIngresos(p) ? totalPeriodo(p.id, 'ingresos') : null; });
+    var ret = D.periodos.map(function (p) { return totalPeriodo(p.id, 'retiros'); });
+    var rt = D.periodos.map(function (p) { return totalPeriodo(p.id, 'rotTemprana'); });
+    var pct = D.periodos.map(function (p, i) { return ret[i] ? rt[i] / ret[i] : 0; });
+    var maxRt = Math.max.apply(null, rt.concat([1]));
+    var maxPct = Math.max.apply(null, pct.concat([0.01]));
+    // La cantidad ocupa la mitad inferior y el % la superior, para que no se crucen
+    var topeRt = Math.ceil(maxRt * 2.3 / 10) * 10;
+    var topePct = Math.min(1, Math.ceil(maxPct * 1.2 * 10) / 10);
+
+    var linea = function (data, color, extra) {
+      return Object.assign({ data: data, borderColor: color, backgroundColor: color, borderWidth: 3, pointRadius: 4, pointHoverRadius: 6, tension: 0.25 }, extra || {});
+    };
+
+    graficos.evolucion = new Chart(document.getElementById('gEvolucion'), {
+      type: 'line',
+      plugins: [resaltarMes],
+      data: { labels: etiquetas, datasets: [
+        linea(ing, C.amarillo, { label: 'Ingresos', datalabels: { align: 'top', anchor: 'end' } }),
+        linea(ret, C.rojo, { label: 'Retiros', datalabels: { align: 'bottom', anchor: 'start' } })
+      ] },
+      options: {
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        onClick: clicEnMes,
+        layout: { padding: { top: 8, left: 4, right: 8 } },
+        scales: { x: ejeX(), y: ejeY() },
+        plugins: { datalabels: { color: C.tinta, font: { weight: '900', size: 11 }, offset: 4 } }
+      }
+    });
+
+    graficos.rotacion = new Chart(document.getElementById('gRotacion'), {
+      type: 'line',
+      plugins: [resaltarMes],
+      data: { labels: etiquetas, datasets: [
+        linea(rt, C.amarillo, { label: 'Cantidad', yAxisID: 'y', datalabels: { align: 'bottom', anchor: 'start', formatter: function (v) { return fmtN.format(v); } } }),
+        linea(pct, C.rojo, { label: '% sobre retiros', yAxisID: 'y1', datalabels: { align: 'top', anchor: 'end', formatter: function (v) { return fmtP.format(v); } } })
+      ] },
+      options: {
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        onClick: clicEnMes,
+        layout: { padding: { top: 8, left: 4, right: 4 } },
+        scales: {
+          x: ejeX(),
+          y: ejeY({ beginAtZero: true, grace: 0, max: topeRt }),
+          y1: ejeY({ beginAtZero: true, grace: 0, min: 0, max: topePct, position: 'right', grid: { display: false }, ticks: { maxTicksLimit: 4, font: { size: 11 }, callback: function (v) { return Math.round(v * 100) + '%'; } } })
+        },
+        plugins: {
+          datalabels: { color: C.tinta, font: { weight: '900', size: 11 }, offset: 4 },
+          tooltip: { callbacks: { label: function (c) { return c.dataset.label + ': ' + (c.dataset.yAxisID === 'y1' ? fmtP.format(c.raw) : fmtN.format(c.raw)); } } }
+        }
+      }
+    });
+  }
+
+  // ---------- Barras por temporal ----------
+  function leyenda(idCont, empresas) {
+    var cont = document.getElementById(idCont);
+    cont.innerHTML = empresas.map(function (e) {
+      return '<span><i style="background:' + colorEmpresa(e, D.empresas.indexOf(e)) + '"></i>' + e + '</span>';
+    }).join('');
+  }
+
+  function opcionesBarras() {
+    return {
+      maintainAspectRatio: false,
+      layout: { padding: { top: 18 } },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { color: C.tinta, font: { weight: '800', size: 10 }, maxRotation: 0, autoSkip: false } },
+        y: { beginAtZero: true, grace: '12%', grid: { color: C.linea }, border: { display: false }, ticks: { precision: 0, maxTicksLimit: 4, font: { size: 11 } } }
+      },
+      plugins: { datalabels: { anchor: 'end', align: 'end', offset: 1, color: C.tinta, font: { weight: '900', size: 11 }, formatter: function (v) { return v ? fmtN.format(v) : ''; } } }
+    };
+  }
+
+  function barra(idCanvas, idLeyenda, idVacio, campo) {
+    var datos, empresasLeyenda;
+    if (sel === 'ANIO') {
+      // Agrupadas por mes, orden fijo de empresas
+      var a = anioSeleccionado();
+      var periodos = D.periodos.filter(function (p) { return p.anio === a; });
+      var activas = D.empresas.filter(function (e) {
+        return filasAnio().some(function (d) { return d.empresa === e && d[campo] > 0; });
+      });
+      datos = {
+        labels: periodos.map(function (p) { return p.nombre.slice(0, 3); }),
+        datasets: activas.map(function (e) {
+          return {
+            label: e,
+            backgroundColor: colorEmpresa(e, D.empresas.indexOf(e)),
+            borderRadius: 3,
+            data: periodos.map(function (p) {
+              var f = D.datos.find(function (d) { return d.periodo === p.id && d.empresa === e; });
+              return f ? f[campo] : 0;
+            })
+          };
+        })
+      };
+      empresasLeyenda = activas;
+    } else {
+      // Un mes: barras ordenadas de mayor a menor; la leyenda sigue el mismo orden
+      var m = porEmpresa(filas(sel), campo);
+      var orden = D.empresas.filter(function (e) { return m[e] > 0; })
+        .sort(function (x, y) { return m[y] - m[x] || D.empresas.indexOf(x) - D.empresas.indexOf(y); });
+      datos = {
+        labels: orden,
+        datasets: [{
+          label: campo,
+          data: orden.map(function (e) { return m[e]; }),
+          backgroundColor: orden.map(function (e) { return colorEmpresa(e, D.empresas.indexOf(e)); }),
+          borderRadius: 4,
+          maxBarThickness: 46
+        }]
+      };
+      empresasLeyenda = orden;
+    }
+    leyenda(idLeyenda, empresasLeyenda);
+    var vacio = datos.datasets.every(function (ds) { return ds.data.every(function (v) { return !v; }); });
+    var cajaVacio = document.getElementById(idVacio);
+    if (campo === 'ingresos' && sel !== 'ANIO' && !conIngresos(periodo(sel)))
+      cajaVacio.textContent = 'Aún no se han cargado los ingresos de ' + cap(nombrePeriodo(periodo(sel))) + '.';
+    else cajaVacio.textContent = cajaVacio.dataset.base || (cajaVacio.dataset.base = cajaVacio.textContent);
+    cajaVacio.style.display = vacio ? 'flex' : 'none';
+    document.getElementById(idCanvas).style.visibility = vacio ? 'hidden' : 'visible';
+
+    var opts = opcionesBarras();
+    if (sel === 'ANIO') opts.plugins.datalabels.display = false; // con 8+ meses las etiquetas se pisan; el detalle queda en el tooltip
+    if (sel !== 'ANIO') opts.scales.x.ticks.display = false; // el nombre ya está en la leyenda
+
+    if (graficos[idCanvas]) {
+      graficos[idCanvas].data = datos;
+      graficos[idCanvas].options = opts;
+      graficos[idCanvas].update();
+    } else {
+      graficos[idCanvas] = new Chart(document.getElementById(idCanvas), { type: 'bar', data: datos, options: opts });
+    }
+  }
+
+  function pintarBarras() {
+    var sufijo = sel === 'ANIO' ? ' ' + anioSeleccionado() : ' ' + nombrePeriodo(D.periodos[indicePeriodo(sel)]);
+    document.getElementById('tIng').textContent = 'INGRESOS POR TEMPORAL –' + sufijo;
+    document.getElementById('tRet').textContent = 'RETIROS POR TEMPORAL –' + sufijo;
+    document.getElementById('tRot').textContent = 'ROTACIÓN TEMPRANA POR TEMPORAL –' + sufijo;
+    barra('gIng', 'lIng', 'eIng', 'ingresos');
+    barra('gRet', 'lRet', 'eRet', 'retiros');
+    barra('gRot', 'lRot', 'eRot', 'rotTemprana');
+  }
+
+  // ---------- Tabla ----------
+  function pintarTabla() {
+    var esAnio = sel === 'ANIO';
+    var base = esAnio ? filasAnio() : filas(sel);
+    var rt = porEmpresa(base, 'rotTemprana');
+    var ret = porEmpresa(base, 'retiros');
+    var acum = porEmpresa(filasAnio(), 'rotTemprana');
+    document.getElementById('thAcum').style.display = esAnio ? 'none' : '';
+
+    var empresas = D.empresas.filter(function (e) { return (ret[e] || 0) > 0 || (rt[e] || 0) > 0; })
+      .sort(function (a, b) { return (rt[b] || 0) - (rt[a] || 0) || D.empresas.indexOf(a) - D.empresas.indexOf(b); });
+
+    var celdaAcum = function (v) { return esAnio ? '' : '<td>' + fmtN.format(v || 0) + '</td>'; };
+    document.getElementById('tablaCuerpo').innerHTML = empresas.map(function (e) {
+      var pct = ret[e] ? (rt[e] || 0) / ret[e] : 0;
+      return '<tr><td><span class="punto" style="background:' + colorEmpresa(e, D.empresas.indexOf(e)) + '"></span>' + e + '</td>' +
+        '<td>' + fmtN.format(rt[e] || 0) + '</td>' + celdaAcum(acum[e]) + '<td>' + fmtP.format(pct) + '</td></tr>';
+    }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--gris)">Sin retiros en este periodo.</td></tr>';
+
+    var tRt = suma(base, 'rotTemprana'), tRet = suma(base, 'retiros');
+    document.getElementById('tablaPie').innerHTML = '<tr><td>Total</td><td>' + fmtN.format(tRt) + '</td>' +
+      celdaAcum(suma(filasAnio(), 'rotTemprana')) + '<td>' + fmtP.format(tRet ? tRt / tRet : 0) + '</td></tr>';
+  }
+
+  // ---------- Índice de rotación ----------
+  function serieIndice() {
+    return D.periodos.map(function (p) {
+      var f = filas(p.id), pl = p.planta;
+      if (!pl) return { total: null, vol: null, inv: null, retiros: suma(f, 'retiros'), planta: null };
+      return { total: suma(f, 'retiros') / pl, vol: suma(f, 'renuncias') / pl, inv: suma(f, 'terminaciones') / pl, retiros: suma(f, 'retiros'), planta: pl };
+    });
+  }
+  function promedio(arr) { var v = arr.filter(function (x) { return x !== null; }); return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null; }
+  var fmtPP = new Intl.NumberFormat('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+  function crearIndice() {
+    var s = serieIndice();
+    var a = D.periodos[D.periodos.length - 1].anio;
+    var prom = promedio(s.filter(function (x, i) { return D.periodos[i].anio === a; }).map(function (x) { return x.total; }));
+    var hay = s.some(function (x) { return x.total !== null; });
+    document.getElementById('eIndice').style.display = hay ? 'none' : 'flex';
+    document.getElementById('gIndice').style.visibility = hay ? 'visible' : 'hidden';
+    var faltan = D.periodos.filter(function (p) { return !p.planta; }).map(function (p) { return cap(nombrePeriodo(p)); });
+    document.getElementById('notaIndice').textContent = faltan.length
+      ? 'Falta la planta de personal de ' + faltan.join(', ') + ' para calcular su índice.' : '';
+    var linea = function (data, color, extra) {
+      return Object.assign({ data: data, borderColor: color, backgroundColor: color, borderWidth: 3, pointRadius: 4, pointHoverRadius: 6, tension: 0.25, spanGaps: false }, extra || {});
+    };
+    graficos.indice = new Chart(document.getElementById('gIndice'), {
+      type: 'line',
+      plugins: [resaltarMes],
+      data: { labels: D.periodos.map(nombrePeriodo), datasets: [
+        linea(s.map(function (x) { return x.total; }), C.rojo, { label: 'Índice total', datalabels: { align: 'top', anchor: 'end' } }),
+        linea(s.map(function (x) { return x.vol; }), C.amarillo, { label: 'Voluntario', datalabels: { align: 'bottom', anchor: 'start' } }),
+        linea(D.periodos.map(function () { return prom; }), C.gris, { label: 'Promedio ' + a, borderWidth: 2, borderDash: [6, 5], pointRadius: 0, pointHoverRadius: 0, tension: 0, datalabels: { display: false } })
+      ] },
+      options: {
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        onClick: clicEnMes,
+        layout: { padding: { top: 10, left: 4, right: 8 } },
+        scales: { x: ejeX(), y: ejeY({ beginAtZero: true, grace: '22%', ticks: { maxTicksLimit: 5, font: { size: 11 }, callback: function (v) { return Math.round(v * 1000) / 10 + '%'; } } }) },
+        plugins: {
+          datalabels: { color: C.tinta, font: { weight: '900', size: 11 }, offset: 4, formatter: function (v) { return v === null ? '' : fmtP.format(v); } },
+          tooltip: { callbacks: {
+            label: function (c) { return c.raw === null ? c.dataset.label + ': sin planta' : c.dataset.label + ': ' + fmtP.format(c.raw); },
+            afterBody: function (items) {
+              var x = s[items[0].dataIndex];
+              if (!x.planta) return ['Retiros: ' + fmtN.format(x.retiros), 'Planta: sin registrar'];
+              return ['Involuntario: ' + fmtP.format(x.inv), 'Retiros: ' + fmtN.format(x.retiros) + ' de ' + fmtN.format(x.planta) + ' empleados'];
+            }
+          } }
+        }
+      }
+    });
+  }
+
+  function pintarIndice() {
+    var s = serieIndice();
+    var cont = document.getElementById('miniIndice');
+    var celda = function (valor, etiqueta) { return '<div><b>' + valor + '</b><span>' + etiqueta + '</span></div>'; };
+    var guion = '<span class="neutro">–</span>';
+    var a = anioSeleccionado();
+    var delAnio = D.periodos.map(function (p, i) { return { p: p, x: s[i] }; }).filter(function (o) { return o.p.anio === a; });
+    var prom = promedio(delAnio.map(function (o) { return o.x.total; }));
+    if (sel === 'ANIO') {
+      var conPlanta = delAnio.filter(function (o) { return o.x.planta; });
+      var plantaProm = promedio(conPlanta.map(function (o) { return o.x.planta; }));
+      var retAnio = conPlanta.reduce(function (t, o) { return t + o.x.retiros; }, 0);
+      var fa = filasAnio();
+      cont.innerHTML =
+        celda(plantaProm ? fmtP.format(retAnio / plantaProm) : guion, 'ÍNDICE ACUMULADO ' + a) +
+        celda(prom !== null ? fmtP.format(prom) : guion, 'PROMEDIO MENSUAL') +
+        celda(plantaProm ? fmtN.format(Math.round(plantaProm)) : guion, 'PLANTA PROMEDIO') +
+        celda(suma(fa, 'retiros') ? fmtP.format(suma(fa, 'renuncias') / suma(fa, 'retiros')) : guion, 'DE LOS RETIROS FUERON RENUNCIAS');
+      return;
+    }
+    var i = indicePeriodo(sel), x = s[i], p = D.periodos[i];
+    var ant = i > 0 ? s[i - 1] : null;
+    var dif = (x.total !== null && ant && ant.total !== null) ? (x.total - ant.total) * 100 : null;
+    var clase = dif === null ? 'neutro' : dif > 0.05 ? 'sube' : dif < -0.05 ? 'baja' : 'neutro';
+    var f = filas(sel);
+    cont.innerHTML =
+      celda(x.total !== null ? fmtP.format(x.total) : guion, 'ÍNDICE ' + nombrePeriodo(p)) +
+      celda(dif === null ? guion : '<span class="' + clase + '">' + (dif > 0 ? '▲ ' : dif < 0 ? '▼ ' : '') + fmtPP.format(Math.abs(dif)) + ' pp</span>',
+        i > 0 ? 'VS ' + nombrePeriodo(D.periodos[i - 1]) : 'SIN MES ANTERIOR') +
+      celda(prom !== null ? fmtP.format(prom) : guion, 'PROMEDIO ' + a) +
+      celda(suma(f, 'retiros') ? fmtP.format(suma(f, 'renuncias') / suma(f, 'retiros')) : guion, 'DE LOS RETIROS FUERON RENUNCIAS');
+  }
+
+  // ---------- Retiros por subproceso ----------
+  var totalAlFinal = {
+    id: 'totalAlFinal',
+    afterDatasetsDraw: function (chart) {
+      var ctx = chart.ctx, n = chart.data.labels.length;
+      ctx.save();
+      ctx.font = '900 12px "Nunito", "Trebuchet MS", sans-serif';
+      ctx.fillStyle = C.tinta;
+      ctx.textBaseline = 'middle';
+      for (var i = 0; i < n; i++) {
+        var total = 0, ultimo = null;
+        chart.data.datasets.forEach(function (ds, d) {
+          total += ds.data[i] || 0;
+          var m = chart.getDatasetMeta(d);
+          if (!m.hidden && m.data[i]) ultimo = m.data[i];
+        });
+        if (ultimo && total) ctx.fillText(fmtN.format(total), ultimo.x + 6, ultimo.y);
+      }
+      ctx.restore();
+    }
+  };
+
+  function pintarSubprocesos() {
+    var lista = (D.subprocesos && D.subprocesos.lista) || [];
+    var datosSub = (D.subprocesos && D.subprocesos.datos) || [];
+    var periodosSub = D.periodos.filter(function (p) { return p.tieneSubprocesos; });
+    var desde = periodosSub.length ? cap(nombrePeriodo(periodosSub[0])) + ' de ' + periodosSub[0].anio : null;
+    var base, titulo, vacioTxt = '';
+    if (sel === 'ANIO') {
+      var a = anioSeleccionado();
+      base = datosSub.filter(function (d) { return Number(d.periodo.slice(0, 4)) === a; });
+      titulo = 'RETIROS POR SUBPROCESO – ' + a;
+      document.getElementById('notaSub').textContent = desde ? 'Detalle disponible desde ' + desde + '.' : '';
+    } else {
+      base = datosSub.filter(function (d) { return d.periodo === sel; });
+      titulo = 'RETIROS POR SUBPROCESO – ' + nombrePeriodo(periodo(sel));
+      document.getElementById('notaSub').textContent = '';
+      if (!periodo(sel).tieneSubprocesos) vacioTxt = desde ? 'El detalle por subproceso está disponible desde ' + desde + '.' : 'Aún no hay detalle por subproceso.';
+    }
+    document.getElementById('tSub').textContent = titulo;
+    var tot = {};
+    lista.forEach(function (sp) { tot[sp] = { r: 0, t: 0 }; });
+    base.forEach(function (d) { if (tot[d.subproceso]) { tot[d.subproceso].r += d.renuncias; tot[d.subproceso].t += d.terminaciones + (d.otros || 0); } });
+    var orden = lista.slice().sort(function (x, y) { return (tot[y].r + tot[y].t) - (tot[x].r + tot[x].t) || lista.indexOf(x) - lista.indexOf(y); });
+    var hay = orden.some(function (sp) { return tot[sp].r + tot[sp].t > 0; });
+    var caja = document.getElementById('eSub');
+    caja.textContent = vacioTxt || 'Sin retiros en estos subprocesos.';
+    caja.style.display = hay ? 'none' : 'flex';
+    document.getElementById('gSub').style.visibility = hay ? 'visible' : 'hidden';
+    var datos = {
+      labels: orden,
+      datasets: [
+        { label: 'Renuncias', data: orden.map(function (sp) { return tot[sp].r; }), backgroundColor: C.amarillo, borderRadius: 3, maxBarThickness: 30 },
+        { label: 'Terminaciones', data: orden.map(function (sp) { return tot[sp].t; }), backgroundColor: C.rojo, borderRadius: 3, maxBarThickness: 30 }
+      ]
+    };
+    var opts = {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      layout: { padding: { right: 30 } },
+      scales: {
+        x: { stacked: true, beginAtZero: true, grid: { color: C.linea }, border: { display: false }, ticks: { precision: 0, maxTicksLimit: 5, font: { size: 11 } } },
+        y: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { color: C.tinta, font: { weight: '800', size: 11 } } }
+      },
+      plugins: {
+        datalabels: { color: function (c) { return c.datasetIndex === 1 ? '#fff' : C.tinta; }, font: { weight: '900', size: 11 }, formatter: function (v) { return v >= 2 ? fmtN.format(v) : ''; } },
+        tooltip: { callbacks: { footer: function (it) { var i = it[0].dataIndex; return 'Total: ' + fmtN.format(tot[orden[i]].r + tot[orden[i]].t); } } }
+      }
+    };
+    if (graficos.sub) { graficos.sub.data = datos; graficos.sub.options = opts; graficos.sub.update(); }
+    else graficos.sub = new Chart(document.getElementById('gSub'), { type: 'bar', data: datos, options: opts, plugins: [totalAlFinal] });
+  }
+
+  // ---------- Arranque ----------
+  function iniciar(datos) {
+    D = datos;
+    if (!D.periodos || !D.periodos.length) throw new Error('data.json no tiene meses.');
+    sel = D.periodos[D.periodos.length - 1].id;
+    document.getElementById('avisoCarga').style.display = 'none';
+    document.getElementById('tablero').hidden = false;
+
+    var p0 = D.periodos[0], pN = D.periodos[D.periodos.length - 1];
+    var conIng = D.periodos.filter(conIngresos);
+    var ultIng = conIng.length ? conIng[conIng.length - 1] : null;
+    document.getElementById('subtitulo').textContent = 'Periodo con datos: ' + cap(p0.nombre) + ' a ' + cap(pN.nombre) + ' de ' + pN.anio + '.' +
+      (ultIng && ultIng.id !== pN.id ? ' Ingresos cargados hasta ' + cap(ultIng.nombre) + '.' : '');
+    var gen = new Date(D.generado);
+    document.getElementById('pie').innerHTML =
+      '<span>Rotación temprana: retiros ocurridos ' + D.umbralDias + ' días o menos después del ingreso, como porcentaje de los retiros del periodo. Índice de rotación: retiros del mes sobre la planta total de empleados; el voluntario cuenta solo renuncias.</span>' +
+      '<span>Datos generados el ' + gen.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }) + '.' +
+      (protegido ? ' <button type="button" class="bloquear" id="btnBloquear">Bloquear tablero</button>' : '') + '</span>';
+    if (protegido) document.getElementById('btnBloquear').onclick = function () { sessionStorage.removeItem('sary-clave'); location.reload(); };
+
+    pintarSelector();
+    crearLineas();
+    crearIndice();
+    seleccionar(sel);
+  }
+
+  // Recibe el contenido de data.json: si está cifrado pide la contraseña
+  function cargar(json) {
+    if (!json || !json.cifrado) { iniciar(json); return; }
+    protegido = true;
+    var guardada = sessionStorage.getItem('sary-clave');
+    if (guardada) {
+      CifradoSary.descifrar(json, guardada).then(iniciar, function () {
+        sessionStorage.removeItem('sary-clave');
+        pedirClave(json);
+      });
+    } else pedirClave(json);
+  }
+
+  function pedirClave(json) {
+    document.getElementById('avisoCarga').style.display = 'none';
+    var caja = document.getElementById('acceso');
+    var input = document.getElementById('clave');
+    var error = document.getElementById('errorClave');
+    var boton = document.getElementById('btnEntrar');
+    document.getElementById('subtitulo').textContent = 'Ingresa la contraseña para ver los datos.';
+    caja.hidden = false;
+    input.focus();
+    document.getElementById('formAcceso').onsubmit = function (e) {
+      e.preventDefault();
+      error.textContent = '';
+      boton.disabled = true;
+      boton.textContent = 'Verificando…';
+      CifradoSary.descifrar(json, input.value).then(function (datos) {
+        sessionStorage.setItem('sary-clave', input.value);
+        caja.hidden = true;
+        iniciar(datos);
+      }, function () {
+        error.textContent = 'Contraseña incorrecta. Revisa mayúsculas y espacios.';
+        boton.disabled = false;
+        boton.textContent = 'Ver tablero';
+        input.select();
+      });
+    };
+  }
+
+  function mostrarAvisoCarga() {
+    var aviso = document.getElementById('avisoCarga');
+    aviso.style.display = 'block';
+    document.getElementById('subtitulo').textContent = 'Sin datos cargados.';
+    ['dragover', 'dragenter'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) { e.preventDefault(); aviso.classList.add('arrastrando'); });
+    });
+    document.addEventListener('dragleave', function () { aviso.classList.remove('arrastrando'); });
+    document.addEventListener('drop', function (e) {
+      e.preventDefault();
+      aviso.classList.remove('arrastrando');
+      var f = e.dataTransfer.files[0];
+      if (!f) return;
+      f.text().then(function (t) { cargar(JSON.parse(t)); })
+        .catch(function (err) { alert('El archivo no es un data.json válido: ' + err.message); });
+    });
+  }
+
+  // Vista previa desde actualizar.html (datos aún no publicados)
+  if (/vista-previa/.test(location.search)) {
+    try {
+      var previa = localStorage.getItem('sary-vista-previa');
+      if (previa) {
+        var b = document.createElement('div');
+        b.textContent = 'Vista previa con los datos que acabas de procesar. Todavía no están publicados en GitHub.';
+        b.style.cssText = 'background:#F5C400;color:#241C18;font-weight:800;text-align:center;padding:10px;';
+        document.body.insertBefore(b, document.body.firstChild);
+        localStorage.removeItem('sary-vista-previa');
+        iniciar(JSON.parse(previa));
+        return;
+      }
+    } catch (e) { /* sigue con data.json */ }
+  }
+
+  fetch('data.json?v=' + Date.now(), { cache: 'no-store' })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(cargar)
+    .catch(mostrarAvisoCarga);
+})();
+</script>
+</body>
+</html>
