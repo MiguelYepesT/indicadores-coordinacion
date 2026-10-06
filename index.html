@@ -129,9 +129,9 @@
 
   /* ---------- KPI ---------- */
   .kpis {
-    grid-column: span 7;
+    grid-column: span 12;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 16px;
   }
   .kpi { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 118px; }
@@ -150,14 +150,48 @@
   .neutro { color: var(--gris); }
 
   .variacion { min-height: 0; flex: 1; }
-  .variaciones { grid-column: span 3; display: grid; grid-template-rows: 1fr 1fr; gap: 16px; }
+  /* ---------- Pestañas ---------- */
+  .pestanas { grid-column: span 12; display: flex; gap: 6px; border-bottom: 3px solid var(--rojo); margin-top: 4px; overflow-x: auto; }
+  .pestanas button {
+    font: inherit; font-weight: 900; font-size: 14px; letter-spacing: 0.03em; cursor: pointer; white-space: nowrap;
+    padding: 12px 22px; border: 0; border-radius: 12px 12px 0 0; background: #EADFCD; color: var(--tinta);
+  }
+  .pestanas button:hover { background: #E2D3BC; }
+  .pestanas button[aria-selected="true"] { background: var(--rojo); color: var(--blanco); }
+  .panel { grid-column: span 12; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; }
+  .columna { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+  /* ---------- Análisis ---------- */
+  .analisis-cabeza { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+  .analisis-cabeza h2 { margin: 0; text-align: left; font-size: 17px; }
+  .copiar { font: inherit; font-weight: 800; font-size: 12.5px; cursor: pointer; border: 2px solid var(--rojo); color: var(--rojo); background: var(--blanco); border-radius: 8px; padding: 6px 12px; }
+  .bloque { padding: 12px 0 4px; border-top: 1px solid var(--linea); }
+  .bloque:first-child { border-top: 0; }
+  .bloque h4 { margin: 0 0 6px; font-size: 14.5px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+  .bloque h4 svg { width: 20px; height: 20px; flex: none; }
+  .bloque ul { list-style: none; margin: 0; padding: 0; }
+  .bloque li { position: relative; padding: 3px 0 3px 20px; font-size: 14px; line-height: 1.45; font-weight: 600; }
+  .bloque li::before { content: ""; position: absolute; left: 3px; top: 10px; width: 8px; height: 8px; background: #3E7BC4; transform: rotate(45deg); border-radius: 1px; }
+  .bloque.destacado { background: #FFF8DC; border-radius: 12px; padding: 12px 14px; border: 0; margin-bottom: 4px; }
+  .bloque.destacado li::before { background: var(--rojo); }
+  .bloque .sutil { color: var(--gris); font-size: 12.5px; }
+  .bloque b { font-weight: 900; }
+  .lienzo.motivos { height: 300px; }
+
+  .seccion {
+    grid-column: span 12; margin: 10px 0 -4px; font-size: 13px; font-weight: 900; letter-spacing: 0.08em; color: var(--rojo);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .seccion::after { content: ""; flex: 1; height: 2px; background: #E8DCCB; border-radius: 2px; }
 
   /* ---------- Gráficos ---------- */
   .leyenda { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; margin: 2px 0 6px; font-size: 12px; font-weight: 800; }
   .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
   .leyenda i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
   .lienzo { position: relative; height: 230px; }
-  .lienzo.bajo { height: 210px; }
+  .lienzo.linea { height: 320px; }
+  .lienzo.barras { height: 250px; }
+  .lienzo.sub { height: 270px; }
   .vacio { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: var(--gris); font-size: 14px; text-align: center; padding: 20px; }
 
   /* ---------- Índice de rotación ---------- */
@@ -166,7 +200,6 @@
   .mini b { display: block; font-size: 22px; font-weight: 900; line-height: 1.1; font-variant-numeric: tabular-nums; }
   .mini > div > span { display: block; font-size: 11px; font-weight: 800; color: var(--gris); margin-top: 3px; line-height: 1.2; }
   .nota-grafico { font-size: 12px; color: var(--gris); text-align: center; margin: 6px 0 0; min-height: 15px; }
-  .lienzo.alto { height: 250px; }
 
   /* ---------- Tabla ---------- */
   .tabla-envoltura { overflow-x: auto; }
@@ -203,21 +236,21 @@
 
   /* ---------- Responsive ---------- */
   @media (max-width: 1180px) {
-    .kpis { grid-column: span 12; }
-    .selector { grid-column: span 12; }
-    .span-5, .span-4 { grid-column: span 6; }
-    .span-7 { grid-column: span 12; }
-    .span-5.sub { grid-column: span 12; }
-    .variaciones { grid-column: span 12; grid-template-columns: 1fr 1fr; grid-template-rows: none; }
-    .span-3 { grid-column: span 6; }
+    .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+  @media (max-width: 1000px) {
+    .span-4 { grid-column: span 6; }
+    .span-7, .span-5 { grid-column: span 12; }
   }
   @media (max-width: 760px) {
-    .marco { margin: 0; border-radius: 0; border-width: 0 0 0 0; padding: 14px; }
+    .marco { margin: 0; border-radius: 0; border-width: 0; padding: 14px; }
     .encabezado { grid-template-columns: 1fr; }
     .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .span-7, .span-6, .span-5, .span-4, .span-3, .span-5.sub { grid-column: span 12; }
+    .span-6, .span-4, .span-12, .span-7, .span-5 { grid-column: span 12; }
+    .pestanas { gap: 4px; }
+    .pestanas button { flex: 1; padding: 10px 6px; font-size: 12px; white-space: normal; line-height: 1.2; }
     .mini { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .variaciones { grid-template-columns: 1fr; }
+    .lienzo.linea { height: 270px; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -251,78 +284,113 @@
   </section>
 
   <div class="rejilla" id="tablero" hidden>
-    <!-- Fila 1 -->
-    <section class="tarjeta selector span-5" aria-label="Selección de mes">
+    <section class="tarjeta selector span-12" aria-label="Selección de mes">
       <h2>SELECCIONAR MES</h2>
       <div class="meses" id="meses"></div>
     </section>
 
-    <div class="kpis">
-      <article class="tarjeta kpi"><div class="valor" id="kIng">–</div><div class="etiqueta" id="kIngEt">INGRESOS</div><div class="nota" id="kIngNota"></div></article>
-      <article class="tarjeta kpi"><div class="valor" id="kIngAnt">–</div><div class="etiqueta" id="kIngAntEt">INGRESOS MES ANTERIOR</div><div class="nota"></div></article>
-      <article class="tarjeta kpi"><div class="valor" id="kRet">–</div><div class="etiqueta" id="kRetEt">RETIROS</div><div class="nota" id="kRetNota"></div></article>
-      <article class="tarjeta kpi"><div class="valor" id="kRetAnt">–</div><div class="etiqueta" id="kRetAntEt">RETIROS MES ANTERIOR</div><div class="nota"></div></article>
-    </div>
+    <nav class="pestanas" role="tablist" aria-label="Secciones del tablero">
+      <button type="button" role="tab" id="tab-ir" data-tab="ir" aria-controls="panel-ir">INGRESOS Y RETIROS</button>
+      <button type="button" role="tab" id="tab-rot" data-tab="rot" aria-controls="panel-rot">ROTACIÓN</button>
+      <button type="button" role="tab" id="tab-ana" data-tab="ana" aria-controls="panel-ana">ANÁLISIS</button>
+    </nav>
 
-    <!-- Fila 2 -->
-    <section class="tarjeta span-5">
-      <h2>EVOLUCIÓN DE INGRESOS VS RETIROS POR MES</h2>
-      <div class="leyenda"><span><i style="background:var(--amarillo)"></i>INGRESOS</span><span><i style="background:var(--rojo)"></i>RETIROS</span></div>
-      <div class="lienzo"><canvas id="gEvolucion" aria-label="Ingresos y retiros por mes"></canvas></div>
-    </section>
-
-    <section class="tarjeta span-4">
-      <h2>CANTIDAD Y % DE ROTACIÓN TEMPRANA POR MES</h2>
-      <div class="leyenda"><span><i style="background:var(--amarillo)"></i>CANTIDAD</span><span><i style="background:var(--rojo)"></i>% SOBRE RETIROS</span></div>
-      <div class="lienzo"><canvas id="gRotacion" aria-label="Rotación temprana por mes"></canvas></div>
-    </section>
-
-    <div class="variaciones">
-      <article class="tarjeta kpi variacion"><div class="valor" id="vAbs">–</div><div class="etiqueta" id="vAbsEt">RETIROS VS MES ANTERIOR</div></article>
-      <article class="tarjeta kpi variacion"><div class="valor" id="vPct">–</div><div class="etiqueta" id="vPctEt">% VAR. RETIROS VS MES ANTERIOR</div></article>
-    </div>
-
-    <!-- Fila 3 -->
-    <section class="tarjeta span-3">
-      <h2 id="tIng">INGRESOS POR TEMPORAL</h2>
-      <div class="leyenda" id="lIng"></div>
-      <div class="lienzo bajo"><canvas id="gIng"></canvas><div class="vacio" id="eIng">Sin ingresos en este periodo.</div></div>
-    </section>
-    <section class="tarjeta span-3">
-      <h2 id="tRet">RETIROS POR TEMPORAL</h2>
-      <div class="leyenda" id="lRet"></div>
-      <div class="lienzo bajo"><canvas id="gRet"></canvas><div class="vacio" id="eRet">Sin retiros en este periodo.</div></div>
-    </section>
-    <section class="tarjeta span-3">
-      <h2 id="tRot">ROTACIÓN TEMPRANA POR TEMPORAL</h2>
-      <div class="leyenda" id="lRot"></div>
-      <div class="lienzo bajo"><canvas id="gRot"></canvas><div class="vacio" id="eRot">Sin rotación temprana en este periodo.</div></div>
-    </section>
-    <section class="tarjeta span-3">
-      <h2>DETALLE DE ROTACIÓN TEMPRANA</h2>
-      <div class="tabla-envoltura">
-        <table>
-          <thead><tr><th>Empresa</th><th>Rot. temprana</th><th id="thAcum">Acum. año</th><th>%</th></tr></thead>
-          <tbody id="tablaCuerpo"></tbody>
-          <tfoot id="tablaPie"></tfoot>
-        </table>
+    <!-- ===== INGRESOS Y RETIROS ===== -->
+    <div class="panel" id="panel-ir" role="tabpanel" aria-labelledby="tab-ir">
+      <div class="kpis">
+        <article class="tarjeta kpi"><div class="valor" id="kIng">–</div><div class="etiqueta" id="kIngEt">INGRESOS</div><div class="nota" id="kIngNota"></div></article>
+        <article class="tarjeta kpi"><div class="valor" id="kIngAnt">–</div><div class="etiqueta" id="kIngAntEt">INGRESOS MES ANTERIOR</div><div class="nota"></div></article>
+        <article class="tarjeta kpi"><div class="valor" id="kRet">–</div><div class="etiqueta" id="kRetEt">RETIROS</div><div class="nota" id="kRetNota"></div></article>
+        <article class="tarjeta kpi"><div class="valor" id="kRetAnt">–</div><div class="etiqueta" id="kRetAntEt">RETIROS MES ANTERIOR</div><div class="nota"></div></article>
+        <article class="tarjeta kpi"><div class="valor" id="vAbs">–</div><div class="etiqueta" id="vAbsEt">RETIROS VS MES ANTERIOR</div></article>
+        <article class="tarjeta kpi"><div class="valor" id="vPct">–</div><div class="etiqueta" id="vPctEt">% VAR. RETIROS VS MES ANTERIOR</div></article>
       </div>
-    </section>
+      <section class="tarjeta span-12">
+        <h2>EVOLUCIÓN DE INGRESOS VS RETIROS POR MES</h2>
+        <div class="leyenda"><span><i style="background:var(--amarillo)"></i>INGRESOS</span><span><i style="background:var(--rojo)"></i>RETIROS</span></div>
+        <div class="lienzo linea"><canvas id="gEvolucion" aria-label="Ingresos y retiros por mes"></canvas></div>
+      </section>
+      <section class="tarjeta span-4">
+        <h2 id="tIng">INGRESOS POR TEMPORAL</h2>
+        <div class="leyenda" id="lIng"></div>
+        <div class="lienzo barras"><canvas id="gIng"></canvas><div class="vacio" id="eIng">Sin ingresos en este periodo.</div></div>
+      </section>
+      <section class="tarjeta span-4">
+        <h2 id="tRet">RETIROS POR TEMPORAL</h2>
+        <div class="leyenda" id="lRet"></div>
+        <div class="lienzo barras"><canvas id="gRet"></canvas><div class="vacio" id="eRet">Sin retiros en este periodo.</div></div>
+      </section>
+      <section class="tarjeta span-4">
+        <h2 id="tSub">RETIROS POR SUBPROCESO</h2>
+        <div class="leyenda"><span><i style="background:var(--amarillo)"></i>RENUNCIAS</span><span><i style="background:var(--rojo)"></i>TERMINACIONES</span></div>
+        <div class="lienzo barras"><canvas id="gSub" aria-label="Retiros por subproceso"></canvas><div class="vacio" id="eSub"></div></div>
+        <p class="nota-grafico" id="notaSub"></p>
+      </section>
+    </div>
 
-    <!-- Fila 4 -->
-    <section class="tarjeta span-7">
-      <h2>ÍNDICE DE ROTACIÓN MENSUAL</h2>
-      <div class="mini" id="miniIndice"></div>
-      <div class="leyenda"><span><i style="background:var(--rojo)"></i>ÍNDICE TOTAL</span><span><i style="background:var(--amarillo)"></i>VOLUNTARIO (RENUNCIAS)</span><span><i style="background:var(--gris);border-radius:2px;height:3px;width:16px"></i>PROMEDIO DEL AÑO</span></div>
-      <div class="lienzo alto"><canvas id="gIndice" aria-label="Índice de rotación por mes"></canvas><div class="vacio" id="eIndice">Aún no hay planta de personal registrada para calcular el índice.</div></div>
-      <p class="nota-grafico" id="notaIndice"></p>
-    </section>
-    <section class="tarjeta span-5 sub">
-      <h2 id="tSub">RETIROS POR SUBPROCESO</h2>
-      <div class="leyenda"><span><i style="background:var(--amarillo)"></i>RENUNCIAS</span><span><i style="background:var(--rojo)"></i>TERMINACIONES</span></div>
-      <div class="lienzo alto"><canvas id="gSub" aria-label="Retiros por subproceso"></canvas><div class="vacio" id="eSub"></div></div>
-      <p class="nota-grafico" id="notaSub"></p>
-    </section>
+    <!-- ===== ROTACIÓN ===== -->
+    <div class="panel" id="panel-rot" role="tabpanel" aria-labelledby="tab-rot" hidden>
+      <section class="tarjeta span-12">
+        <h2>ÍNDICE DE ROTACIÓN MENSUAL</h2>
+        <div class="mini" id="miniIndice"></div>
+        <div class="leyenda"><span><i style="background:var(--rojo)"></i>ÍNDICE TOTAL</span><span><i style="background:var(--amarillo)"></i>VOLUNTARIO (RENUNCIAS)</span><span><i style="background:var(--gris);border-radius:2px;height:3px;width:16px"></i>PROMEDIO DEL AÑO</span></div>
+        <div class="lienzo linea"><canvas id="gIndice" aria-label="Índice de rotación por mes"></canvas><div class="vacio" id="eIndice">Aún no hay planta de personal registrada para calcular el índice.</div></div>
+        <p class="nota-grafico" id="notaIndice"></p>
+      </section>
+      <section class="tarjeta span-7">
+        <h2>CANTIDAD Y % DE ROTACIÓN TEMPRANA POR MES</h2>
+        <div class="leyenda"><span><i style="background:var(--amarillo)"></i>CANTIDAD</span><span><i style="background:var(--rojo)"></i>% SOBRE RETIROS</span></div>
+        <div class="lienzo linea"><canvas id="gRotacion" aria-label="Rotación temprana por mes"></canvas></div>
+      </section>
+      <section class="tarjeta span-5">
+        <h2>DETALLE DE ROTACIÓN TEMPRANA</h2>
+        <div class="tabla-envoltura">
+          <table>
+            <thead><tr><th>Empresa</th><th>Retiros</th><th>Rot. temprana</th><th>%</th><th id="thAcum">Acum. año</th></tr></thead>
+            <tbody id="tablaCuerpo"></tbody>
+            <tfoot id="tablaPie"></tfoot>
+          </table>
+        </div>
+      </section>
+      <section class="tarjeta span-4">
+        <h2 id="tRot">ROTACIÓN TEMPRANA POR TEMPORAL</h2>
+        <div class="leyenda" id="lRot"></div>
+        <div class="lienzo sub"><canvas id="gRot"></canvas><div class="vacio" id="eRot">Sin rotación temprana en este periodo.</div></div>
+      </section>
+      <section class="tarjeta span-4">
+        <h2 id="tRotSub">ROTACIÓN TEMPRANA POR SUBPROCESO</h2>
+        <div class="leyenda"><span><i style="background:var(--rojo)"></i>RETIROS EN LOS PRIMEROS&nbsp;<b id="umbralSub" style="font-weight:800">60</b>&nbsp;DÍAS</span></div>
+        <div class="lienzo sub"><canvas id="gRotSub" aria-label="Rotación temprana por subproceso"></canvas><div class="vacio" id="eRotSub"></div></div>
+        <p class="nota-grafico">El porcentaje es sobre los retiros de cada subproceso.</p>
+      </section>
+      <section class="tarjeta span-4">
+        <h2 id="tPerm">PERMANENCIA POR SUBPROCESO</h2>
+        <div class="leyenda"><span><i style="background:var(--vino)"></i>PROMEDIO</span><span><i style="background:var(--amarillo)"></i>MEDIANA</span></div>
+        <div class="lienzo sub"><canvas id="gPerm" aria-label="Días de permanencia por subproceso"></canvas><div class="vacio" id="ePerm"></div></div>
+        <p class="nota-grafico">Días entre el ingreso y el retiro. La mediana es el punto medio: la mitad de las personas duró menos que eso.</p>
+      </section>
+    </div>
+
+    <!-- ===== ANÁLISIS ===== -->
+    <div class="panel" id="panel-ana" role="tabpanel" aria-labelledby="tab-ana" hidden>
+      <section class="tarjeta analisis span-7">
+        <div class="analisis-cabeza">
+          <h2 id="tAnalisis">ANÁLISIS</h2>
+          <button type="button" class="copiar" id="btnCopiar">Copiar texto</button>
+        </div>
+        <div id="analisis"></div>
+      </section>
+      <div class="columna span-5">
+        <section class="tarjeta">
+          <h2 id="tMotivos">MOTIVOS DE RENUNCIA</h2>
+          <div class="lienzo motivos"><canvas id="gMotivos" aria-label="Motivos de renuncia"></canvas><div class="vacio" id="eMotivos"></div></div>
+        </section>
+        <section class="tarjeta">
+          <h2 id="tCausas">CAUSAS DE TERMINACIÓN</h2>
+          <div class="lienzo motivos"><canvas id="gCausas" aria-label="Causas de terminación"></canvas><div class="vacio" id="eCausas"></div></div>
+        </section>
+      </div>
+    </div>
   </div>
 
   <footer class="pie" id="pie"></footer>
@@ -408,6 +476,8 @@
     pintarTabla();
     pintarIndice();
     pintarSubprocesos();
+    pintarAnalisis();
+    pintarMotivos();
     graficos.evolucion.update('none');
     graficos.rotacion.update('none');
     graficos.indice.update('none');
@@ -679,13 +749,14 @@
     document.getElementById('tablaCuerpo').innerHTML = empresas.map(function (e) {
       var pct = ret[e] ? (rt[e] || 0) / ret[e] : 0;
       return '<tr><td><span class="punto" style="background:' + colorEmpresa(e, D.empresas.indexOf(e)) + '"></span>' + e + '</td>' +
-        '<td>' + fmtN.format(rt[e] || 0) + '</td>' + celdaAcum(acum[e]) + '<td>' + fmtP.format(pct) + '</td></tr>';
-    }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--gris)">Sin retiros en este periodo.</td></tr>';
+        '<td>' + fmtN.format(ret[e] || 0) + '</td><td>' + fmtN.format(rt[e] || 0) + '</td><td>' + fmtP.format(pct) + '</td>' + celdaAcum(acum[e]) + '</tr>';
+    }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--gris)">Sin retiros en este periodo.</td></tr>';
 
     var tRt = suma(base, 'rotTemprana'), tRet = suma(base, 'retiros');
-    document.getElementById('tablaPie').innerHTML = '<tr><td>Total</td><td>' + fmtN.format(tRt) + '</td>' +
-      celdaAcum(suma(filasAnio(), 'rotTemprana')) + '<td>' + fmtP.format(tRet ? tRt / tRet : 0) + '</td></tr>';
+    document.getElementById('tablaPie').innerHTML = '<tr><td>Total</td><td>' + fmtN.format(tRet) + '</td><td>' + fmtN.format(tRt) + '</td><td>' +
+      fmtP.format(tRet ? tRt / tRet : 0) + '</td>' + celdaAcum(suma(filasAnio(), 'rotTemprana')) + '</tr>';
   }
+
 
   // ---------- Índice de rotación ----------
   function serieIndice() {
@@ -795,55 +866,429 @@
     }
   };
 
-  function pintarSubprocesos() {
+  // Suma por subproceso lo que corresponde al mes elegido (o al año)
+  function agregadoSubprocesos() {
     var lista = (D.subprocesos && D.subprocesos.lista) || [];
     var datosSub = (D.subprocesos && D.subprocesos.datos) || [];
     var periodosSub = D.periodos.filter(function (p) { return p.tieneSubprocesos; });
     var desde = periodosSub.length ? cap(nombrePeriodo(periodosSub[0])) + ' de ' + periodosSub[0].anio : null;
-    var base, titulo, vacioTxt = '';
+    var base, sufijo, vacioTxt = '', nota = '';
     if (sel === 'ANIO') {
       var a = anioSeleccionado();
       base = datosSub.filter(function (d) { return Number(d.periodo.slice(0, 4)) === a; });
-      titulo = 'RETIROS POR SUBPROCESO – ' + a;
-      document.getElementById('notaSub').textContent = desde ? 'Detalle disponible desde ' + desde + '.' : '';
+      sufijo = ' – ' + a;
+      nota = desde ? 'Detalle disponible desde ' + desde + '.' : '';
     } else {
       base = datosSub.filter(function (d) { return d.periodo === sel; });
-      titulo = 'RETIROS POR SUBPROCESO – ' + nombrePeriodo(periodo(sel));
-      document.getElementById('notaSub').textContent = '';
+      sufijo = ' – ' + nombrePeriodo(periodo(sel));
       if (!periodo(sel).tieneSubprocesos) vacioTxt = desde ? 'El detalle por subproceso está disponible desde ' + desde + '.' : 'Aún no hay detalle por subproceso.';
     }
-    document.getElementById('tSub').textContent = titulo;
     var tot = {};
-    lista.forEach(function (sp) { tot[sp] = { r: 0, t: 0 }; });
-    base.forEach(function (d) { if (tot[d.subproceso]) { tot[d.subproceso].r += d.renuncias; tot[d.subproceso].t += d.terminaciones + (d.otros || 0); } });
+    lista.forEach(function (sp) { tot[sp] = { r: 0, t: 0, rt: 0, dias: [], conDias: false }; });
+    base.forEach(function (d) {
+      var x = tot[d.subproceso];
+      if (!x) return;
+      x.r += d.renuncias; x.t += d.terminaciones + (d.otros || 0); x.rt += d.rotTemprana || 0;
+      if (d.dias) { x.dias = x.dias.concat(d.dias); x.conDias = true; }
+    });
+    lista.forEach(function (sp) { tot[sp].dias.sort(function (p, q) { return p - q; }); });
+    var tieneDias = base.some(function (d) { return d.dias; });
+    return { lista: lista, tot: tot, sufijo: sufijo, vacioTxt: vacioTxt, nota: nota, tieneDias: tieneDias, hayBase: base.length > 0 };
+  }
+
+  function mediana(arr) {
+    if (!arr.length) return null;
+    var m = Math.floor(arr.length / 2);
+    return arr.length % 2 ? arr[m] : (arr[m - 1] + arr[m]) / 2;
+  }
+
+  function mostrarVacio(idCanvas, idCaja, hay, texto) {
+    var caja = document.getElementById(idCaja);
+    caja.textContent = texto;
+    caja.style.display = hay ? 'none' : 'flex';
+    document.getElementById(idCanvas).style.visibility = hay ? 'visible' : 'hidden';
+  }
+
+  function ejesHorizontales(apilado, extraX) {
+    return {
+      x: Object.assign({ stacked: apilado, beginAtZero: true, grace: '18%', grid: { color: C.linea }, border: { display: false }, ticks: { precision: 0, maxTicksLimit: 5, font: { size: 11 } } }, extraX || {}),
+      y: { stacked: apilado, grid: { display: false }, border: { display: false }, ticks: { color: C.tinta, font: { weight: '800', size: 11 } } }
+    };
+  }
+
+  function dibujar(clave, idCanvas, tipo, datos, opts, plugins) {
+    if (graficos[clave]) { graficos[clave].data = datos; graficos[clave].options = opts; graficos[clave].update(); }
+    else graficos[clave] = new Chart(document.getElementById(idCanvas), { type: tipo, data: datos, options: opts, plugins: plugins || [] });
+  }
+
+  function pintarSubprocesos() {
+    var A = agregadoSubprocesos(), tot = A.tot, lista = A.lista;
+    document.getElementById('notaSub').textContent = A.nota;
+    document.getElementById('tSub').textContent = 'RETIROS POR SUBPROCESO' + A.sufijo;
+    document.getElementById('tPerm').textContent = 'PERMANENCIA POR SUBPROCESO' + A.sufijo;
+    document.getElementById('tRotSub').textContent = 'ROTACIÓN TEMPRANA POR SUBPROCESO' + A.sufijo;
+    document.getElementById('umbralSub').textContent = D.umbralDias;
+
+    // 1. Retiros por subproceso (renuncias + terminaciones)
     var orden = lista.slice().sort(function (x, y) { return (tot[y].r + tot[y].t) - (tot[x].r + tot[x].t) || lista.indexOf(x) - lista.indexOf(y); });
     var hay = orden.some(function (sp) { return tot[sp].r + tot[sp].t > 0; });
-    var caja = document.getElementById('eSub');
-    caja.textContent = vacioTxt || 'Sin retiros en estos subprocesos.';
-    caja.style.display = hay ? 'none' : 'flex';
-    document.getElementById('gSub').style.visibility = hay ? 'visible' : 'hidden';
-    var datos = {
+    mostrarVacio('gSub', 'eSub', hay, A.vacioTxt || 'Sin retiros en estos subprocesos.');
+    dibujar('sub', 'gSub', 'bar', {
       labels: orden,
       datasets: [
-        { label: 'Renuncias', data: orden.map(function (sp) { return tot[sp].r; }), backgroundColor: C.amarillo, borderRadius: 3, maxBarThickness: 30 },
-        { label: 'Terminaciones', data: orden.map(function (sp) { return tot[sp].t; }), backgroundColor: C.rojo, borderRadius: 3, maxBarThickness: 30 }
+        { label: 'Renuncias', data: orden.map(function (sp) { return tot[sp].r; }), backgroundColor: C.amarillo, borderRadius: 3, maxBarThickness: 28 },
+        { label: 'Terminaciones', data: orden.map(function (sp) { return tot[sp].t; }), backgroundColor: C.rojo, borderRadius: 3, maxBarThickness: 28 }
       ]
-    };
-    var opts = {
-      indexAxis: 'y',
-      maintainAspectRatio: false,
-      layout: { padding: { right: 30 } },
-      scales: {
-        x: { stacked: true, beginAtZero: true, grid: { color: C.linea }, border: { display: false }, ticks: { precision: 0, maxTicksLimit: 5, font: { size: 11 } } },
-        y: { stacked: true, grid: { display: false }, border: { display: false }, ticks: { color: C.tinta, font: { weight: '800', size: 11 } } }
-      },
+    }, {
+      indexAxis: 'y', maintainAspectRatio: false, layout: { padding: { right: 30 } },
+      scales: ejesHorizontales(true),
       plugins: {
         datalabels: { color: function (c) { return c.datasetIndex === 1 ? '#fff' : C.tinta; }, font: { weight: '900', size: 11 }, formatter: function (v) { return v >= 2 ? fmtN.format(v) : ''; } },
-        tooltip: { callbacks: { footer: function (it) { var i = it[0].dataIndex; return 'Total: ' + fmtN.format(tot[orden[i]].r + tot[orden[i]].t); } } }
+        tooltip: { callbacks: { footer: function (it) { var sp = orden[it[0].dataIndex]; return 'Total: ' + fmtN.format(tot[sp].r + tot[sp].t); } } }
       }
+    }, [totalAlFinal]);
+
+    // 2. Permanencia: promedio y mediana de días
+    var conDatos = lista.filter(function (sp) { return tot[sp].dias.length; });
+    var ordenP = conDatos.slice().sort(function (x, y) { return mediana(tot[x].dias) - mediana(tot[y].dias); });
+    var promedio = function (a) { return a.reduce(function (s, v) { return s + v; }, 0) / a.length; };
+    var vacioPerm = A.vacioTxt || (A.hayBase && !A.tieneDias ? 'Vuelve a cargar el consolidado de retiros para calcular este indicador.' : 'Sin retiros con fechas completas en estos subprocesos.');
+    mostrarVacio('gPerm', 'ePerm', ordenP.length > 0, vacioPerm);
+    dibujar('perm', 'gPerm', 'bar', {
+      labels: ordenP.map(function (sp) { return [sp, tot[sp].dias.length + (tot[sp].dias.length === 1 ? ' persona' : ' personas')]; }),
+      datasets: [
+        { label: 'Promedio', data: ordenP.map(function (sp) { return Math.round(promedio(tot[sp].dias)); }), backgroundColor: C.vino, borderRadius: 3, maxBarThickness: 16 },
+        { label: 'Mediana', data: ordenP.map(function (sp) { return Math.round(mediana(tot[sp].dias)); }), backgroundColor: C.amarillo, borderRadius: 3, maxBarThickness: 16 }
+      ]
+    }, {
+      indexAxis: 'y', maintainAspectRatio: false, layout: { padding: { right: 14 } },
+      scales: ejesHorizontales(false, { title: { display: true, text: 'Días', font: { size: 11, weight: '800' } } }),
+      plugins: {
+        datalabels: { anchor: 'end', align: 'end', offset: 2, color: C.tinta, font: { weight: '900', size: 10.5 }, formatter: function (v) { return fmtN.format(v) + ' d'; } },
+        tooltip: { callbacks: {
+          title: function (it) { return ordenP[it[0].dataIndex]; },
+          label: function (c) { return c.dataset.label + ': ' + fmtN.format(c.raw) + ' días'; },
+          footer: function (it) { var d = tot[ordenP[it[0].dataIndex]].dias; return 'Entre ' + fmtN.format(d[0]) + ' y ' + fmtN.format(d[d.length - 1]) + ' días · ' + d.length + ' retiros'; }
+        } }
+      }
+    });
+
+    // 3. Rotación temprana por subproceso
+    var ordenR = lista.filter(function (sp) { return tot[sp].r + tot[sp].t > 0; })
+      .sort(function (x, y) { return tot[y].rt - tot[x].rt || lista.indexOf(x) - lista.indexOf(y); });
+    var hayRt = ordenR.length > 0 && A.tieneDias;
+    mostrarVacio('gRotSub', 'eRotSub', hayRt, A.vacioTxt || (A.hayBase && !A.tieneDias ? 'Vuelve a cargar el consolidado de retiros para calcular este indicador.' : 'Sin retiros en estos subprocesos.'));
+    dibujar('rotSub', 'gRotSub', 'bar', {
+      labels: ordenR,
+      datasets: [{ label: 'Rotación temprana', data: ordenR.map(function (sp) { return tot[sp].rt; }), backgroundColor: C.rojo, borderRadius: 3, maxBarThickness: 28 }]
+    }, {
+      indexAxis: 'y', maintainAspectRatio: false, layout: { padding: { right: 18 } },
+      scales: ejesHorizontales(false, { grace: '35%' }),
+      plugins: {
+        datalabels: { anchor: 'end', align: 'end', offset: 4, color: C.tinta, font: { weight: '900', size: 11 },
+          formatter: function (v, c) { var sp = ordenR[c.dataIndex], ret = tot[sp].r + tot[sp].t; return fmtN.format(v) + ' · ' + fmtP.format(ret ? v / ret : 0); } },
+        tooltip: { callbacks: { label: function (c) { var sp = ordenR[c.dataIndex], ret = tot[sp].r + tot[sp].t; return fmtN.format(c.raw) + ' de ' + fmtN.format(ret) + ' retiros (' + fmtP.format(ret ? c.raw / ret : 0) + ')'; } } }
+      }
+    });
+  }
+
+
+  // ---------- Pestañas ----------
+  var PESTANAS = ['ir', 'rot', 'ana'];
+  function activarPestana(t) {
+    if (PESTANAS.indexOf(t) < 0) t = 'ir';
+    PESTANAS.forEach(function (x) {
+      document.getElementById('tab-' + x).setAttribute('aria-selected', String(x === t));
+      document.getElementById('panel-' + x).hidden = x !== t;
+    });
+    if (location.hash !== '#' + t) history.replaceState(null, '', '#' + t);
+    Object.keys(graficos).forEach(function (k) { graficos[k].resize(); });
+  }
+  document.querySelectorAll('.pestanas button').forEach(function (b) {
+    b.addEventListener('click', function () { activarPestana(b.dataset.tab); });
+  });
+
+  // ---------- Utilidades del análisis ----------
+  function resumenMes(id) {
+    var p = periodo(id), f = filas(id);
+    return {
+      p: p, ing: conIngresos(p) ? suma(f, 'ingresos') : null, ret: suma(f, 'retiros'), ren: suma(f, 'renuncias'),
+      ter: suma(f, 'terminaciones'), rt: suma(f, 'rotTemprana'), planta: p.planta || null,
+      rtEmp: porEmpresa(f, 'rotTemprana'), retEmp: porEmpresa(f, 'retiros'), ingEmp: porEmpresa(f, 'ingresos')
     };
-    if (graficos.sub) { graficos.sub.data = datos; graficos.sub.options = opts; graficos.sub.update(); }
-    else graficos.sub = new Chart(document.getElementById('gSub'), { type: 'bar', data: datos, options: opts, plugins: [totalAlFinal] });
+  }
+  function subMes(ids) {
+    var tot = {}, lista = (D.subprocesos && D.subprocesos.lista) || [];
+    lista.forEach(function (sp) { tot[sp] = { ren: 0, ter: 0, rt: 0, ant: 0, dias: [] }; });
+    ((D.subprocesos && D.subprocesos.datos) || []).forEach(function (d) {
+      if (ids.indexOf(d.periodo) < 0 || !tot[d.subproceso]) return;
+      var x = tot[d.subproceso];
+      x.ren += d.renuncias; x.ter += d.terminaciones + (d.otros || 0); x.rt += d.rotTemprana || 0; x.ant += d.antecedentes || 0;
+      if (d.dias) x.dias = x.dias.concat(d.dias);
+    });
+    lista.forEach(function (sp) { tot[sp].dias.sort(function (a, b) { return a - b; }); tot[sp].ret = tot[sp].ren + tot[sp].ter; });
+    return tot;
+  }
+  function detalleMotivos(ids) {
+    var r = {}, c = {}, ant = 0, hay = false;
+    ids.forEach(function (id) {
+      var d = D.retirosDetalle && D.retirosDetalle[id];
+      if (!d) return;
+      hay = true; ant += d.antecedentes || 0;
+      Object.keys(d.motivosRenuncia || {}).forEach(function (k) { r[k] = (r[k] || 0) + d.motivosRenuncia[k]; });
+      Object.keys(d.causasTerminacion || {}).forEach(function (k) { c[k] = (c[k] || 0) + d.causasTerminacion[k]; });
+    });
+    return hay ? { renuncia: r, causa: c, antecedentes: ant } : null;
+  }
+  function ordenados(obj) { return Object.keys(obj).map(function (k) { return [k, obj[k]]; }).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); }); }
+  function nCap(sp) { return sp.charAt(0) + sp.slice(1).toLowerCase().replace('medellín', 'Medellín').replace('bogotá', 'Bogotá').replace('cali', 'Cali'); }
+  function b(x) { return '<b>' + x + '</b>'; }
+  function cuantos(n, uno, varios) { return fmtN.format(n) + ' ' + (n === 1 ? uno : varios); }
+  var NO_MOTIVO = ['Sin dato', 'No se obtiene respuesta'];
+  function conSigno(n) { return n > 0 ? '+' + fmtN.format(n) : n < 0 ? '−' + fmtN.format(-n) : '0'; }
+  function pp(x) { return (x > 0 ? '+' : x < 0 ? '−' : '') + fmtPP.format(Math.abs(x)) + ' pp'; }
+  // flecha para cifras donde subir es malo (retiros, rotación)
+  function flecha(antes, ahora) {
+    if (ahora > antes) return '<span class="sube">↑</span>';
+    if (ahora < antes) return '<span class="baja">↓</span>';
+    return '<span class="neutro">=</span>';
+  }
+  function lista(arr) { return arr.filter(Boolean).map(function (x) { return x[0] + ' ' + x[1]; }).join(', '); }
+  function empresasTexto(obj) {
+    return ordenados(obj).filter(function (x) { return x[1] > 0; }).map(function (x) { return fmtN.format(x[1]) + ' ' + x[0]; }).join(', ');
+  }
+
+  var ICONOS = {
+    clave: '<svg viewBox="0 0 24 24" fill="none" stroke="#C8001E" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>',
+    mes: '<svg viewBox="0 0 24 24" fill="none" stroke="#C8001E" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+    tendencia: '<svg viewBox="0 0 24 24" fill="none" stroke="#3E7BC4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',
+    anio: '<svg viewBox="0 0 24 24" fill="none" stroke="#1E7C45" stroke-width="2.2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>',
+    areas: '<svg viewBox="0 0 24 24" fill="none" stroke="#8B0012" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>',
+    sub: '<svg viewBox="0 0 24 24" fill="none" stroke="#F5A200" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>',
+    motivos: '<svg viewBox="0 0 24 24" fill="none" stroke="#6E6460" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg>'
+  };
+
+  // ---------- Análisis automático ----------
+  var textoAnalisis = '';
+  function pintarAnalisis() {
+    var bloques = sel === 'ANIO' ? analisisAnio() : analisisMes(sel);
+    var titulo = sel === 'ANIO' ? 'ANÁLISIS – ' + anioSeleccionado() : 'ANÁLISIS – ' + nombrePeriodo(periodo(sel)) + (variosAnios() ? '' : ' ' + periodo(sel).anio);
+    document.getElementById('tAnalisis').textContent = titulo;
+    document.getElementById('analisis').innerHTML = bloques.filter(function (x) { return x && x.items.length; }).map(function (bl) {
+      return '<div class="bloque' + (bl.destacado ? ' destacado' : '') + '"><h4>' + (ICONOS[bl.icono] || '') + bl.titulo + '</h4><ul>' +
+        bl.items.map(function (it) { return '<li>' + it + '</li>'; }).join('') + '</ul></div>';
+    }).join('') || '<p class="sutil">No hay datos suficientes para este periodo.</p>';
+    var tmp = document.createElement('div');
+    textoAnalisis = titulo + '\n\n' + bloques.filter(function (x) { return x && x.items.length; }).map(function (bl) {
+      return bl.titulo + '\n' + bl.items.map(function (it) { tmp.innerHTML = it; return '• ' + tmp.textContent; }).join('\n');
+    }).join('\n\n');
+  }
+
+  function analisisMes(id) {
+    var i = indicePeriodo(id), M = resumenMes(id), nombre = cap(nombrePeriodo(M.p));
+    var ant = i > 0 ? resumenMes(D.periodos[i - 1].id) : null;
+    var idAnio = (M.p.anio - 1) + '-' + String(M.p.mes).padStart(2, '0');
+    var hace = indicePeriodo(idAnio) >= 0 ? resumenMes(idAnio) : null;
+    var idx = M.planta ? M.ret / M.planta : null;
+    var delAnio = D.periodos.filter(function (p) { return p.anio === M.p.anio && p.planta; });
+    var promAnio = delAnio.length ? delAnio.reduce(function (s, p) { return s + totalPeriodo(p.id, 'retiros') / p.planta; }, 0) / delAnio.length : null;
+    var S = M.p.tieneSubprocesos ? subMes([id]) : null;
+    var Sant = S && ant && ant.p.tieneSubprocesos ? subMes([ant.p.id]) : null;
+    var Mot = detalleMotivos([id]);
+    var bloques = [];
+
+    // Puntos clave
+    var clave = [];
+    if (idx !== null && promAnio !== null && delAnio.length > 1) {
+      var dif = (idx - promAnio) * 100;
+      clave.push('El índice de rotación de ' + nombre + ' (' + b(fmtP.format(idx)) + ') ' +
+        (Math.abs(dif) < 0.1 ? 'está en línea con' : 'está ' + b(fmtPP.format(Math.abs(dif)) + ' pp ' + (dif > 0 ? 'por encima' : 'por debajo')) + ' del') +
+        ' promedio de ' + M.p.anio + ' (' + fmtP.format(promAnio) + ').');
+    }
+    var empRt = D.empresas.filter(function (e) { return (M.retEmp[e] || 0) >= 5; })
+      .sort(function (x, y) { return M.rtEmp[y] / M.retEmp[y] - M.rtEmp[x] / M.retEmp[x]; })[0];
+    if (empRt && M.rtEmp[empRt]) clave.push(b(empRt) + ' tiene la mayor rotación temprana: ' + fmtN.format(M.rtEmp[empRt]) + ' de ' + fmtN.format(M.retEmp[empRt]) + ' retiros (' + b(fmtP.format(M.rtEmp[empRt] / M.retEmp[empRt])) + ') salieron en los primeros ' + D.umbralDias + ' días.');
+    if (S) {
+      var spRt = Object.keys(S).filter(function (sp) { return S[sp].ret >= 5; }).sort(function (x, y) { return S[y].rt / S[y].ret - S[x].rt / S[x].ret; })[0];
+      if (spRt && S[spRt].rt) clave.push('En ' + b(nCap(spRt)) + ', ' + fmtN.format(S[spRt].rt) + ' de ' + fmtN.format(S[spRt].ret) + ' retiros (' + b(fmtP.format(S[spRt].rt / S[spRt].ret)) + ') fueron de rotación temprana.');
+    }
+    if (Mot) {
+      var top = ordenados(Mot.renuncia).filter(function (x) { return NO_MOTIVO.indexOf(x[0]) < 0; })[0];
+      if (top) clave.push('Motivo de renuncia más frecuente: ' + b('«' + top[0] + '»') + ' (' + fmtN.format(top[1]) + ' de ' + fmtN.format(M.ren) + ').');
+    }
+    bloques.push({ titulo: 'PUNTOS CLAVE', icono: 'clave', destacado: true, items: clave });
+
+    // Rotación del mes
+    var it = [];
+    it.push(idx !== null ? 'Planta / retiros | índice: ' + b(fmtN.format(M.planta) + ' / ' + fmtN.format(M.ret) + ' | ' + fmtP.format(idx))
+      : b(fmtN.format(M.ret) + ' retiros') + ' <span class="sutil">(falta la planta del mes para calcular el índice)</span>');
+    it.push(b(fmtN.format(M.ren) + ' renuncias') + (M.planta ? ' → ' + b(fmtP.format(M.ren / M.planta)) + ' de la planta' : '') + (M.ret ? ' · ' + fmtP.format(M.ren / M.ret) + ' de los retiros' : ''));
+    it.push(b(fmtN.format(M.ter) + ' terminaciones') + (M.planta ? ' → ' + b(fmtP.format(M.ter / M.planta)) + ' de la planta' : '') + (M.ret ? ' · ' + fmtP.format(M.ter / M.ret) + ' de los retiros' : ''));
+    if (S) Object.keys(S).forEach(function (sp) {
+      if (S[sp].ant) it.push('De ' + fmtN.format(S[sp].ren) + ' renuncias en ' + nCap(sp) + ', ' + b(fmtN.format(S[sp].ant)) + ' fueron renuncias con antecedentes.');
+    });
+    if (Mot && !S && Mot.antecedentes) it.push(b(fmtN.format(Mot.antecedentes)) + ' renuncias con antecedentes.');
+    it.push('Rotación temprana: ' + b(fmtN.format(M.rt) + ' casos') + (M.ret ? ' (' + fmtP.format(M.rt / M.ret) + ' de los retiros)' : '') + (M.rt ? ': ' + empresasTexto(M.rtEmp) + '.' : '.'));
+    if (M.ing !== null) it.push('Ingresos: ' + b(fmtN.format(M.ing)) + (M.ing ? ' (' + empresasTexto(M.ingEmp) + ').' : '.'));
+    else it.push('Ingresos: <span class="sutil">aún no se han cargado.</span>');
+    bloques.push({ titulo: 'ROTACIÓN – ' + nombrePeriodo(M.p) + ' ' + M.p.anio, icono: 'mes', items: it });
+
+    // Comparaciones
+    function comparar(A, titulo, icono) {
+      var c = [];
+      c.push('Retiros: ' + fmtN.format(A.ret) + ' → ' + fmtN.format(M.ret) + ' (' + b(conSigno(M.ret - A.ret)) + ')');
+      c.push('Renuncias ' + flecha(A.ren, M.ren) + ' (' + fmtN.format(A.ren) + ') ' + b(fmtN.format(M.ren)) + '  |  Terminaciones ' + flecha(A.ter, M.ter) + ' (' + fmtN.format(A.ter) + ') ' + b(fmtN.format(M.ter)));
+      if (idx !== null && A.planta) {
+        var ia = A.ret / A.planta;
+        c.push('Índice de rotación: ' + fmtP.format(ia) + ' → ' + fmtP.format(idx) + ' (' + b(pp((idx - ia) * 100)) + ')' +
+          (A.planta !== M.planta ? '. La planta pasó de ' + fmtN.format(A.planta) + ' a ' + fmtN.format(M.planta) + ' personas' : ''));
+      }
+      c.push('Rotación temprana: ' + fmtN.format(A.rt) + ' → ' + fmtN.format(M.rt) + ' (' + b(conSigno(M.rt - A.rt)) + ')' +
+        (A.ret && M.ret ? ' · ' + fmtP.format(A.rt / A.ret) + ' → ' + fmtP.format(M.rt / M.ret) + ' de los retiros' : ''));
+      if (A.ing !== null && M.ing !== null) c.push('Ingresos: ' + fmtN.format(A.ing) + ' → ' + fmtN.format(M.ing) + ' (' + b(conSigno(M.ing - A.ing)) + ')');
+      return { titulo: titulo, icono: icono, items: c };
+    }
+    if (ant) bloques.push(comparar(ant, 'VS. MES ANTERIOR (' + nombrePeriodo(ant.p) + ')', 'tendencia'));
+    if (hace) bloques.push(comparar(hace, 'VS. ' + nombrePeriodo(hace.p) + ' ' + hace.p.anio, 'anio'));
+    else bloques.push({ titulo: 'VS. ' + nombrePeriodo(M.p) + ' ' + (M.p.anio - 1), icono: 'anio', items: ['<span class="sutil">Aún no hay datos de ' + cap(nombrePeriodo(M.p)) + ' ' + (M.p.anio - 1) + ' cargados para comparar.</span>'] });
+
+    // Áreas (según el archivo de total de empleados)
+    var areas = D.areasPorMes && D.areasPorMes[id];
+    var areasAnt = ant && D.areasPorMes && D.areasPorMes[ant.p.id];
+    if (areas && areas.length) {
+      var a = areas.filter(function (x) { return x.planta > 0 && x.retiros > 0; })
+        .sort(function (x, y) { return y.retiros - x.retiros || y.retiros / y.planta - x.retiros / x.planta; })
+        .map(function (x) {
+          var ix = x.retiros / x.planta, prev = areasAnt && areasAnt.filter(function (z) { return z.area === x.area; })[0];
+          var txt = b(x.area) + ': ' + cuantos(x.retiros, 'retiro', 'retiros') + ' de ' + fmtN.format(x.planta) + ' → ' + b(fmtP.format(ix));
+          if (prev && prev.planta) txt += ' <span class="sutil">(' + pp((ix - prev.retiros / prev.planta) * 100) + ' vs ' + cap(nombrePeriodo(ant.p)) + '; ' + fmtN.format(prev.retiros) + ' → ' + fmtN.format(x.retiros) + (x.retiros === 1 ? ' retiro' : ' retiros') + ')</span>';
+          return txt;
+        });
+      a.push('<span class="sutil">Cifras por área tomadas del archivo TOTAL EMPLEADOS.</span>');
+      bloques.push({ titulo: 'ÁREAS', icono: 'areas', items: a });
+    } else if (D.areasPorMes && Object.keys(D.areasPorMes).length) {
+      bloques.push({ titulo: 'ÁREAS', icono: 'areas', items: ['<span class="sutil">TOTAL EMPLEADOS todavía no tiene el bloque de ' + cap(nombrePeriodo(M.p)) + '.</span>'] });
+    }
+
+    // Subprocesos
+    if (S) {
+      var s = Object.keys(S).filter(function (sp) { return S[sp].ret > 0; }).sort(function (x, y) { return S[y].ret - S[x].ret; }).map(function (sp) {
+        var x = S[sp], med = mediana(x.dias);
+        var txt = b(nCap(sp)) + ': ' + cuantos(x.ret, 'retiro', 'retiros') + ' (' + cuantos(x.ren, 'renuncia', 'renuncias') + ', ' + cuantos(x.ter, 'terminación', 'terminaciones') + ') · ' +
+          fmtN.format(x.rt) + ' de rotación temprana (' + fmtP.format(x.rt / x.ret) + ')' + (med !== null ? ' · mediana de permanencia ' + fmtN.format(Math.round(med)) + ' días' : '');
+        if (Sant && Sant[sp]) txt += ' <span class="sutil">(' + (x.ret === Sant[sp].ret ? 'igual que ' : conSigno(x.ret - Sant[sp].ret) + ' vs ') + cap(nombrePeriodo(ant.p)) + ')</span>';
+        return txt;
+      });
+      bloques.push({ titulo: 'SUBPROCESOS', icono: 'sub', items: s });
+    }
+
+    // Motivos
+    if (Mot) bloques.push(bloqueMotivos(Mot, M.ren, M.ter));
+    return bloques;
+  }
+
+  function bloqueMotivos(Mot, ren, ter) {
+    var m = [];
+    var r = ordenados(Mot.renuncia).filter(function (x) { return NO_MOTIVO.indexOf(x[0]) < 0; }).slice(0, 3);
+    var c = ordenados(Mot.causa).filter(function (x) { return x[0] !== 'Sin dato'; }).slice(0, 3);
+    if (r.length) m.push('Principales motivos de renuncia: ' + r.map(function (x) { return x[0] + ' (' + b(fmtN.format(x[1])) + ')'; }).join(', ') + '.');
+    if (c.length) m.push('Principales causas de terminación: ' + c.map(function (x) { return x[0] + ' (' + b(fmtN.format(x[1])) + ')'; }).join(', ') + '.');
+    var sinRespuesta = Mot.renuncia['No se obtiene respuesta'];
+    if (sinRespuesta) m.push('En ' + b(fmtN.format(sinRespuesta)) + ' de ' + fmtN.format(ren) + ' renuncias no se logró contactar a la persona para conocer el motivo.');
+    return { titulo: 'MOTIVOS', icono: 'motivos', items: m };
+  }
+
+  function analisisAnio() {
+    var a = anioSeleccionado(), per = periodosDelAnio(a), ids = per.map(function (p) { return p.id; });
+    var fa = filasAnio(), ret = suma(fa, 'retiros'), ren = suma(fa, 'renuncias'), ter = suma(fa, 'terminaciones'), rt = suma(fa, 'rotTemprana');
+    var conPl = per.filter(function (p) { return p.planta; });
+    var plProm = conPl.length ? conPl.reduce(function (s, p) { return s + p.planta; }, 0) / conPl.length : null;
+    var retConPl = conPl.reduce(function (s, p) { return s + totalPeriodo(p.id, 'retiros'); }, 0);
+    var idxMes = conPl.map(function (p) { return { p: p, i: totalPeriodo(p.id, 'retiros') / p.planta }; }).sort(function (x, y) { return y.i - x.i; });
+    var rtEmp = porEmpresa(fa, 'rotTemprana'), retEmp = porEmpresa(fa, 'retiros');
+    var bloques = [], clave = [];
+    if (plProm) clave.push('Índice de rotación acumulado ' + a + ': ' + b(fmtP.format(retConPl / plProm)) + ' (' + fmtN.format(retConPl) + ' retiros sobre una planta promedio de ' + fmtN.format(Math.round(plProm)) + ').');
+    if (idxMes.length > 1) clave.push('Mes con mayor rotación: ' + b(cap(idxMes[0].p.nombre) + ' (' + fmtP.format(idxMes[0].i) + ')') + '; el más bajo: ' + cap(idxMes[idxMes.length - 1].p.nombre) + ' (' + fmtP.format(idxMes[idxMes.length - 1].i) + ').');
+    var minimo = Math.max(10, Math.round(ret * 0.05));
+    var empRt = D.empresas.filter(function (e) { return (retEmp[e] || 0) >= minimo; }).sort(function (x, y) { return rtEmp[y] / retEmp[y] - rtEmp[x] / retEmp[x]; })[0];
+    if (empRt && rtEmp[empRt]) clave.push(b(empRt) + ' concentra la mayor rotación temprana del año: ' + fmtN.format(rtEmp[empRt]) + ' de ' + fmtN.format(retEmp[empRt]) + ' retiros (' + b(fmtP.format(rtEmp[empRt] / retEmp[empRt])) + ').');
+    bloques.push({ titulo: 'PUNTOS CLAVE', icono: 'clave', destacado: true, items: clave });
+
+    var it = [];
+    it.push(b(fmtN.format(ret) + ' retiros') + ' en ' + per.length + ' meses (' + fmtN.format(Math.round(ret / per.length)) + ' por mes en promedio).');
+    it.push(b(fmtN.format(ren) + ' renuncias') + ' (' + fmtP.format(ret ? ren / ret : 0) + ') y ' + b(fmtN.format(ter) + ' terminaciones') + ' (' + fmtP.format(ret ? ter / ret : 0) + ').');
+    it.push('Rotación temprana: ' + b(fmtN.format(rt) + ' casos') + ' (' + fmtP.format(ret ? rt / ret : 0) + ' de los retiros): ' + empresasTexto(rtEmp) + '.');
+    var ing = suma(fa, 'ingresos'), mesesIng = per.filter(conIngresos).length;
+    if (mesesIng) it.push('Ingresos: ' + b(fmtN.format(ing)) + ' en ' + mesesIng + ' meses (' + empresasTexto(porEmpresa(fa, 'ingresos')) + ').');
+    bloques.push({ titulo: 'RESUMEN ' + a, icono: 'mes', items: it });
+
+    var mm = per.map(function (p) { var r = totalPeriodo(p.id, 'retiros'), q = totalPeriodo(p.id, 'rotTemprana'); return { p: p, r: r, q: q, pq: r ? q / r : 0 }; });
+    var masRet = mm.slice().sort(function (x, y) { return y.r - x.r; })[0], menosRet = mm.slice().sort(function (x, y) { return x.r - y.r; })[0];
+    var masRt = mm.slice().sort(function (x, y) { return y.pq - x.pq; })[0];
+    bloques.push({ titulo: 'MES A MES', icono: 'tendencia', items: [
+      'Más retiros: ' + b(cap(masRet.p.nombre) + ' (' + fmtN.format(masRet.r) + ')') + '; menos retiros: ' + cap(menosRet.p.nombre) + ' (' + fmtN.format(menosRet.r) + ').',
+      'Mayor proporción de rotación temprana: ' + b(cap(masRt.p.nombre) + ' (' + fmtP.format(masRt.pq) + ' de los retiros)') + '.'
+    ] });
+
+    var idsSub = per.filter(function (p) { return p.tieneSubprocesos; }).map(function (p) { return p.id; });
+    if (idsSub.length) {
+      var S = subMes(idsSub);
+      var desde = cap(periodo(idsSub[0]).nombre);
+      var s = Object.keys(S).filter(function (sp) { return S[sp].ret > 0; }).sort(function (x, y) { return S[y].ret - S[x].ret; }).map(function (sp) {
+        var x = S[sp], med = mediana(x.dias);
+        return b(nCap(sp)) + ': ' + fmtN.format(x.ret) + ' retiros · ' + fmtN.format(x.rt) + ' de rotación temprana (' + fmtP.format(x.rt / x.ret) + ')' + (med !== null ? ' · mediana de permanencia ' + fmtN.format(Math.round(med)) + ' días' : '') + (x.ant ? ' · ' + fmtN.format(x.ant) + ' renuncias con antecedentes' : '');
+      });
+      s.push('<span class="sutil">Datos por subproceso desde ' + desde + '.</span>');
+      bloques.push({ titulo: 'SUBPROCESOS', icono: 'sub', items: s });
+    }
+    var Mot = detalleMotivos(ids);
+    if (Mot) {
+      var renMot = idsSub.reduce(function (s, id) { return s + totalPeriodo(id, 'renuncias'); }, 0);
+      var bm = bloqueMotivos(Mot, renMot, 0);
+      bm.items.push('<span class="sutil">Motivos disponibles desde ' + cap(periodo(idsSub[0] || ids[0]).nombre) + '.</span>');
+      bloques.push(bm);
+    }
+    return bloques;
+  }
+
+  document.getElementById('btnCopiar').addEventListener('click', function () {
+    var btn = this;
+    navigator.clipboard.writeText(textoAnalisis).then(function () {
+      btn.textContent = 'Copiado'; setTimeout(function () { btn.textContent = 'Copiar texto'; }, 1800);
+    }, function () { btn.textContent = 'No se pudo copiar'; });
+  });
+
+  // ---------- Motivos de renuncia y causas de terminación ----------
+  function partir(t, n) {
+    var palabras = t.split(' '), lineas = [], l = '';
+    palabras.forEach(function (w) { if ((l + ' ' + w).trim().length > n && l) { lineas.push(l); l = w; } else l = (l + ' ' + w).trim(); });
+    if (l) lineas.push(l);
+    return lineas.length > 2 ? [lineas[0], lineas.slice(1).join(' ').slice(0, n - 1) + '…'] : lineas;
+  }
+  function pintarMotivos() {
+    var ids = sel === 'ANIO' ? periodosDelAnio(anioSeleccionado()).map(function (p) { return p.id; }) : [sel];
+    var Mot = detalleMotivos(ids);
+    var con = D.periodos.filter(function (p) { return D.retirosDetalle && D.retirosDetalle[p.id]; });
+    var vacio = con.length ? 'Los motivos están disponibles desde ' + cap(nombrePeriodo(con[0])) + ' de ' + con[0].anio + '.' : 'Vuelve a cargar el consolidado de retiros para ver los motivos.';
+    var suf = sel === 'ANIO' ? ' – ' + anioSeleccionado() : ' – ' + nombrePeriodo(periodo(sel));
+    document.getElementById('tMotivos').textContent = 'MOTIVOS DE RENUNCIA' + suf;
+    document.getElementById('tCausas').textContent = 'CAUSAS DE TERMINACIÓN' + suf;
+    [['motivos', 'gMotivos', 'eMotivos', Mot && Mot.renuncia, C.amarillo], ['causas', 'gCausas', 'eCausas', Mot && Mot.causa, C.rojo]].forEach(function (cfg) {
+      var obj = cfg[3] || {}, filasM = ordenados(obj), total = filasM.reduce(function (s, x) { return s + x[1]; }, 0);
+      if (filasM.length > 7) { var resto = filasM.slice(6).reduce(function (s, x) { return s + x[1]; }, 0); filasM = filasM.slice(0, 6).concat([['Otros motivos', resto]]); }
+      mostrarVacio(cfg[1], cfg[2], filasM.length > 0, Mot ? 'Sin registros en este periodo.' : vacio);
+      dibujar(cfg[0], cfg[1], 'bar', {
+        labels: filasM.map(function (x) { return partir(x[0], 30); }),
+        datasets: [{ data: filasM.map(function (x) { return x[1]; }), backgroundColor: cfg[4], borderRadius: 3, maxBarThickness: 22 }]
+      }, {
+        indexAxis: 'y', maintainAspectRatio: false, layout: { padding: { right: 16 } },
+        scales: ejesHorizontales(false, { grace: '30%' }),
+        plugins: {
+          datalabels: { anchor: 'end', align: 'end', offset: 3, color: C.tinta, font: { weight: '900', size: 11 }, formatter: function (v) { return fmtN.format(v) + ' · ' + fmtP.format(total ? v / total : 0); } },
+          tooltip: { callbacks: { title: function (it) { return filasM[it[0].dataIndex][0]; }, label: function (c) { return fmtN.format(c.raw) + ' de ' + fmtN.format(total); } } }
+        }
+      });
+    });
   }
 
   // ---------- Arranque ----------
@@ -863,10 +1308,12 @@
     document.getElementById('pie').innerHTML =
       '<span>Rotación temprana: retiros ocurridos ' + D.umbralDias + ' días o menos después del ingreso, como porcentaje de los retiros del periodo. Índice de rotación: retiros del mes sobre la planta total de empleados; el voluntario cuenta solo renuncias.</span>' +
       '<span>Datos generados el ' + gen.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' }) + '.' +
-      (protegido ? ' <button type="button" class="bloquear" id="btnBloquear">Bloquear tablero</button>' : '') + '</span>';
+      (protegido ? ' <button type="button" class="bloquear" id="btnBloquear">Bloquear tablero</button>' : '') +
+      ' <a class="bloquear" href="cargar.html">Cargar datos del mes</a></span>';
     if (protegido) document.getElementById('btnBloquear').onclick = function () { sessionStorage.removeItem('sary-clave'); location.reload(); };
 
     pintarSelector();
+    activarPestana(location.hash.replace('#', ''));
     crearLineas();
     crearIndice();
     seleccionar(sel);

@@ -204,6 +204,15 @@
   function idPeriodo(anio, mes) { return anio + '-' + String(mes).padStart(2, '0'); }
   function textoFecha(n) { var p = partesDeSerial(n); return p.dia + '/' + p.mes + '/' + p.anio; }
 
+  // Texto legible para motivos y causas: sin espacios raros, primera letra en mayúscula
+  function textoLimpio(v) {
+    if (v === null || v === undefined) return '';
+    var t = String(v).replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!t) return '';
+    t = t.toLowerCase();
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
+
   // Busca en el libro una tabla (o una hoja) cuyos encabezados incluyan todos los requeridos
   function buscarPorEncabezados(XLSX, wb, requeridos) {
     var tablas = tablasDelLibro(wb);
@@ -254,27 +263,44 @@
 
   // Lee un archivo de "total de empleados" con bloques por mes:
   // una celda "MES DE AÑO" seguida de una fila "TOTAL | número".
+  function nombreArea(v) {
+    var a = encabezado(v);
+    if (a.indexOf('MERCADEO') === 0 || a === 'VENTAS' || a === 'VENTAS NACIONALES') return 'Ventas nacionales';
+    if (a.indexOf('INTERNACIONAL') >= 0) return 'Ventas internacionales';
+    if (/\+/.test(a) || a.length <= 3) return limpiar(v);
+    var t = limpiar(v).toLowerCase();
+    return t.charAt(0).toUpperCase() + t.slice(1);
+  }
   function leerArchivoPlanta(XLSX, wb) {
-    var res = {}, n = 0;
+    var totales = {}, areas = {}, n = 0;
     wb.SheetNames.forEach(function (nombre) {
       var m = XLSX.utils.sheet_to_json(wb.Sheets[nombre], { header: 1, raw: true, defval: null });
-      var actual = null;
+      var actual = null, enAreas = false;
       m.forEach(function (fila) {
+        var celdas = fila.filter(function (v) { return v !== null && v !== ''; });
+        if (!celdas.length) { enAreas = false; return; }
         for (var j = 0; j < fila.length; j++) {
           var v = fila[j];
-          if (typeof v === 'string') {
-            var t = /^([A-ZÁÉÍÓÚ]+)\s+DE\s+(\d{4})$/.exec(limpiar(v));
-            if (t && MESES.indexOf(t[1]) >= 0) { actual = idPeriodo(+t[2], MESES.indexOf(t[1]) + 1); return; }
-            if (actual && encabezado(v) === 'TOTAL' && typeof fila[j + 1] === 'number' && fila[j + 1] > 20) {
-              if (!res[actual]) { res[actual] = Math.round(fila[j + 1]); n++; }
-              return;
-            }
+          if (typeof v !== 'string') continue;
+          var t = /^([A-ZÁÉÍÓÚ]+)\s+DE\s+(\d{4})$/.exec(limpiar(v));
+          if (t && MESES.indexOf(t[1]) >= 0) { actual = idPeriodo(+t[2], MESES.indexOf(t[1]) + 1); enAreas = false; return; }
+          if (!actual) return;
+          var et = encabezado(v), num = fila[j + 1], ret = fila[j + 2];
+          if (et === 'TOTAL' && typeof num === 'number' && num > 20) {
+            if (!totales[actual]) { totales[actual] = Math.round(num); n++; areas[actual] = []; enAreas = true; }
+            return;
           }
+          if (/^(RENUNCIA|TERMINACION|AREAS)/.test(et)) { enAreas = false; return; }
+          if (enAreas && typeof num === 'number') {
+            areas[actual].push({ area: nombreArea(v), planta: Math.round(num), retiros: typeof ret === 'number' ? Math.round(ret) : 0 });
+          }
+          return;
         }
       });
     });
-    return n ? res : null;
+    return n ? { totales: totales, areas: areas } : null;
   }
+
 
   // ---------- Procesamiento principal ----------
 
@@ -293,6 +319,7 @@
     var planta = {};          // periodo -> { valor, origen, aviso }
     var consolidados = [];    // versiones encontradas del consolidado
     var archivosPlanta = [];  // versiones encontradas del archivo de total de empleados
+    var areasPorMes = {};     // periodo -> [{ area, planta, retiros }] según el archivo de total de empleados
 
     archivos
       .slice()
@@ -316,6 +343,7 @@
             cMr = columna(e, 'MES DE RETIRO'), cAr = columna(e, 'ANO RETIRO'), cMot = columna(e, 'MOTIVO DE TERMINA'),
             cSub = columna(e, 'SUBPROCESO');
           if (cAr < 0) cAr = columna(e, 'ANO DE RETIRO');
+          var cGen = columna(e, 'MOTIVO GENERICO'), cCausa = columna(e, 'CAUSA DE LA TERMINACION');
           var n = 0, meses = {}, filasArchivo = [], avisosArchivo = [];
           consol.filas.forEach(function (r, i) {
             if (r.every(function (v) { return v === null || v === ''; })) return;
@@ -330,15 +358,20 @@
             }
             var empresa = normalizarEmpresa(r[cEmp]);
             var si = serialFecha(r[cFi]);
-            var rt = false;
+            var rt = false, diasPerm = null;
             if (si !== null && sr !== null) {
               var dias = sr - si;
+              if (dias >= 0) diasPerm = dias;
               rt = dias >= 0 && dias <= UMBRAL_DIAS;
               if (dias < 0) avisosArchivo.push(base + ' · fila ' + fila + ' (' + empresa + '): la fecha de retiro es anterior a la de ingreso.');
             } else {
               avisosArchivo.push(base + ' · fila ' + fila + ' (' + empresa + (sr !== null ? ', retiro ' + textoFecha(sr) : '') + '): sin fecha de ingreso, no entra en rotación temprana.');
             }
-            filasArchivo.push({ periodo: per, empresa: empresa, motivo: tipoMotivo(cMot >= 0 ? r[cMot] : ''), rt: rt, sub: cSub >= 0 ? normalizarSubproceso(r[cSub]) : null });
+            var textoMotivo = encabezado(cMot >= 0 ? r[cMot] : '');
+            filasArchivo.push({ periodo: per, empresa: empresa, motivo: tipoMotivo(cMot >= 0 ? r[cMot] : ''), rt: rt, dias: diasPerm,
+              sub: cSub >= 0 ? normalizarSubproceso(r[cSub]) : null,
+              antecedentes: textoMotivo.indexOf('ANTECEDENTE') >= 0,
+              motivoGen: cGen >= 0 ? textoLimpio(r[cGen]) : '', causa: cCausa >= 0 ? textoLimpio(r[cCausa]) : '' });
             meses[per] = true;
             n++;
           });
@@ -351,7 +384,7 @@
         if (!tieneIngresos) {
           var valores = leerArchivoPlanta(XLSX, wb);
           if (valores) {
-            archivosPlanta.push({ nombre: f.nombre, fecha: f.fecha || 0, valores: valores });
+            archivosPlanta.push({ nombre: f.nombre, fecha: f.fecha || 0, valores: valores.totales, areas: valores.areas });
             return;
           }
           avisos.push(f.nombre + ': no se reconoció como Excel mensual, consolidado de retiros ni total de empleados. No se usó.');
@@ -431,6 +464,7 @@
         planta[per] = { valor: ap.valores[per], origen: 'Archivo de total de empleados', aviso: '' };
       });
       usados.push({ archivo: ap.nombre, tipo: 'planta', ingresos: 0, retiros: 0, meses: Object.keys(ap.valores).sort() });
+      areasPorMes = ap.areas;
     }
 
     // Los meses del consolidado reemplazan los retiros de la carpeta
@@ -472,8 +506,20 @@
     retConsol.forEach(function (r) {
       if (!r.sub) return;
       var k = r.periodo + '|' + r.sub;
-      if (!sub[k]) sub[k] = { periodo: r.periodo, subproceso: r.sub, renuncias: 0, terminaciones: 0, otros: 0 };
+      if (!sub[k]) sub[k] = { periodo: r.periodo, subproceso: r.sub, renuncias: 0, terminaciones: 0, otros: 0, rotTemprana: 0, antecedentes: 0, dias: [] };
       sub[k][r.motivo]++;
+      if (r.antecedentes) sub[k].antecedentes++;
+      if (r.rt) sub[k].rotTemprana++;
+      if (r.dias !== null && r.dias !== undefined) sub[k].dias.push(r.dias);
+    });
+
+    // Motivos de renuncia y causas de terminación por mes (solo del consolidado)
+    var retirosDetalle = {};
+    retConsol.forEach(function (r) {
+      var d = retirosDetalle[r.periodo] || (retirosDetalle[r.periodo] = { antecedentes: 0, motivosRenuncia: {}, causasTerminacion: {} });
+      if (r.antecedentes) d.antecedentes++;
+      if (r.motivo === 'renuncias') { var mg = r.motivoGen || 'Sin dato'; d.motivosRenuncia[mg] = (d.motivosRenuncia[mg] || 0) + 1; }
+      if (r.motivo === 'terminaciones') { var ca = r.causa || 'Sin dato'; d.causasTerminacion[ca] = (d.causasTerminacion[ca] || 0) + 1; }
     });
 
     var data = {
@@ -493,16 +539,168 @@
       }),
       empresas: empresas,
       datos: filas,
+      retirosDetalle: retirosDetalle,
+      areasPorMes: areasPorMes,
       subprocesos: {
         lista: SUBPROCESOS,
-        datos: Object.keys(sub).sort().map(function (k) { return sub[k]; })
+        datos: Object.keys(sub).sort().map(function (k) { sub[k].dias.sort(function (x, y) { return x - y; }); return sub[k]; })
       }
     };
 
     return { data: data, usados: usados, omitidos: omitidos, avisos: avisos, planta: planta };
   }
 
-  var api = { procesar: procesar, MESES: MESES, UMBRAL_DIAS: UMBRAL_DIAS };
+  // ---------- Fusión: cargar un mes sobre los datos ya publicados ----------
+
+  function totalesPeriodo(d, p) {
+    var t = { ingresos: 0, retiros: 0, rotTemprana: 0, renuncias: 0, terminaciones: 0 };
+    d.datos.forEach(function (x) { if (x.periodo === p) Object.keys(t).forEach(function (k) { t[k] += x[k] || 0; }); });
+    var per = (d.periodos || []).filter(function (x) { return x.id === p; })[0];
+    t.planta = per ? per.planta : null;
+    t.tieneIngresos = per ? per.tieneIngresos !== false : false;
+    t.fuenteRetiros = per ? per.fuenteRetiros : null;
+    t.existe = !!per;
+    return t;
+  }
+
+  /*
+   * base: data.json ya publicado (descifrado)
+   * r: resultado de procesar() con SOLO los archivos que se adjuntaron
+   * mes: periodo elegido ('2026-10')
+   * plantaManual: número escrito a mano para ese mes (opcional)
+   */
+  function fusionar(base, r, mes, plantaManual) {
+    var d = JSON.parse(JSON.stringify(base));
+    var avisos = [], tocados = {}, errores = [];
+    d.datos = d.datos || [];
+    d.subprocesos = d.subprocesos || { lista: SUBPROCESOS, datos: [] };
+    d.subprocesos.lista = SUBPROCESOS;
+    if (!d.plantaPorMes) {
+      d.plantaPorMes = {}; d.plantaOrigen = {};
+      (d.periodos || []).forEach(function (p) { if (p.planta) { d.plantaPorMes[p.id] = p.planta; d.plantaOrigen[p.id] = 'anterior'; } });
+    }
+    var perMap = {};
+    (d.periodos || []).forEach(function (p) { perMap[p.id] = JSON.parse(JSON.stringify(p)); });
+    function periodo(id) {
+      if (!perMap[id]) perMap[id] = { id: id, tieneIngresos: false, tieneRetiros: false, fuenteRetiros: 'carpeta', tieneSubprocesos: false };
+      return perMap[id];
+    }
+    function fila(p, e) {
+      var f = d.datos.filter(function (x) { return x.periodo === p && x.empresa === e; })[0];
+      if (!f) { f = { periodo: p, empresa: e, ingresos: 0, retiros: 0, rotTemprana: 0, renuncias: 0, terminaciones: 0 }; d.datos.push(f); }
+      return f;
+    }
+    var CAMPOS_RET = ['retiros', 'rotTemprana', 'renuncias', 'terminaciones'];
+    function copiarRetiros(p) {
+      d.datos.forEach(function (x) { if (x.periodo === p) CAMPOS_RET.forEach(function (k) { x[k] = 0; }); });
+      r.data.datos.forEach(function (x) { if (x.periodo === p) { var f = fila(p, x.empresa); CAMPOS_RET.forEach(function (k) { f[k] = x[k] || 0; }); } });
+    }
+    var nombreMes = MESES[Number(mes.slice(5, 7)) - 1] + ' ' + mes.slice(0, 4);
+    var rPer = {}; r.data.periodos.forEach(function (p) { rPer[p.id] = p; });
+
+    // 1. Ingresos del mes elegido (Excel mensual)
+    var hayMensual = r.usados.some(function (u) { return u.tipo === 'mensual'; });
+    if (hayMensual) {
+      var mesesIng = r.data.periodos.filter(function (p) { return p.tieneIngresos; }).map(function (p) { return p.id; });
+      if (mesesIng.indexOf(mes) < 0) {
+        errores.push('El Excel mensual no trae ingresos de ' + nombreMes + (mesesIng.length ? ' (trae de ' + mesesIng.map(function (p) { return MESES[Number(p.slice(5, 7)) - 1]; }).join(', ') + ')' : '') + '. Revisa que sea el archivo correcto o que el mes elegido sea el correcto.');
+      } else {
+        d.datos.forEach(function (x) { if (x.periodo === mes) x.ingresos = 0; });
+        r.data.datos.forEach(function (x) { if (x.periodo === mes && x.ingresos) fila(mes, x.empresa).ingresos = x.ingresos; });
+        periodo(mes).tieneIngresos = true;
+        tocados[mes] = true;
+        mesesIng.filter(function (p) { return p !== mes; }).forEach(function (p) {
+          var n = r.data.datos.filter(function (x) { return x.periodo === p; }).reduce(function (a, x) { return a + x.ingresos; }, 0);
+          avisos.push('El Excel mensual tiene ' + n + ' ingreso(s) de ' + MESES[Number(p.slice(5, 7)) - 1] + '. No se contaron: solo se carga ' + nombreMes + '.');
+        });
+      }
+    }
+
+    // 2. Retiros: el consolidado reemplaza todos los meses que trae
+    var consol = r.usados.filter(function (u) { return u.tipo === 'consolidado'; })[0];
+    var mesesConsol = consol ? consol.meses : [];
+    mesesConsol.forEach(function (p) {
+      copiarRetiros(p);
+      var per = periodo(p);
+      per.tieneRetiros = true; per.fuenteRetiros = 'consolidado'; per.tieneSubprocesos = true;
+      d.subprocesos.datos = d.subprocesos.datos.filter(function (x) { return x.periodo !== p; })
+        .concat(r.data.subprocesos.datos.filter(function (x) { return x.periodo === p; }));
+      d.retirosDetalle = d.retirosDetalle || {};
+      if (r.data.retirosDetalle && r.data.retirosDetalle[p]) d.retirosDetalle[p] = r.data.retirosDetalle[p];
+      tocados[p] = true;
+    });
+    if (hayMensual && mesesConsol.indexOf(mes) < 0 && errores.length === 0) {
+      var perBase = perMap[mes];
+      if (perBase && perBase.fuenteRetiros === 'consolidado') {
+        avisos.push('Los retiros de ' + nombreMes + ' ya vienen del consolidado publicado; se ignoró la hoja RETIROS del Excel mensual.');
+      } else if (rPer[mes] && rPer[mes].tieneRetiros) {
+        copiarRetiros(mes);
+        var pm = periodo(mes);
+        pm.tieneRetiros = true; pm.fuenteRetiros = 'carpeta'; pm.tieneSubprocesos = false;
+        avisos.push('No adjuntaste el consolidado de retiros: los retiros de ' + nombreMes + ' se tomaron de la hoja RETIROS del Excel mensual.');
+      }
+    }
+
+    // 3. Planta: archivo de total de empleados > lo escrito a mano > hoja del Excel mensual
+    Object.keys(r.planta).forEach(function (p) {
+      var o = r.planta[p];
+      if (/Archivo/.test(o.origen)) {
+        if (d.plantaPorMes[p] !== o.valor && perMap[p]) tocados[p] = true;
+        d.plantaPorMes[p] = o.valor; d.plantaOrigen[p] = 'archivo';
+      } else if (p === mes && d.plantaOrigen[p] !== 'archivo' && !(plantaManual > 0)) {
+        d.plantaPorMes[p] = o.valor; d.plantaOrigen[p] = 'hoja';
+        if (o.aviso) avisos.push(o.aviso);
+      }
+    });
+    var areasNuevas = r.data.areasPorMes || {};
+    if (Object.keys(areasNuevas).length) {
+      d.areasPorMes = d.areasPorMes || {};
+      Object.keys(areasNuevas).forEach(function (p) {
+        if (JSON.stringify(d.areasPorMes[p]) !== JSON.stringify(areasNuevas[p]) && perMap[p]) tocados[p] = true;
+        d.areasPorMes[p] = areasNuevas[p];
+      });
+    }
+    if (plantaManual > 0) {
+      if (d.plantaPorMes[mes] !== plantaManual) tocados[mes] = true;
+      d.plantaPorMes[mes] = plantaManual; d.plantaOrigen[mes] = 'manual';
+    }
+
+    // 4. Reconstruir periodos, empresas y orden
+    d.datos = d.datos.filter(function (x) {
+      return x.ingresos || x.retiros || x.rotTemprana || x.renuncias || x.terminaciones;
+    });
+    var vistas = {};
+    d.datos.forEach(function (x) { vistas[x.empresa] = true; periodo(x.periodo); });
+    var empresas = ORDEN_EMPRESAS.filter(function (e) { return vistas[e]; });
+    Object.keys(vistas).sort().forEach(function (e) { if (empresas.indexOf(e) < 0) empresas.push(e); });
+    d.empresas = empresas;
+    d.periodos = Object.keys(perMap).sort().filter(function (id) {
+      return d.datos.some(function (x) { return x.periodo === id; });
+    }).map(function (id) {
+      var p = perMap[id];
+      var a = Number(id.slice(0, 4)), m = Number(id.slice(5, 7));
+      return {
+        id: id, anio: a, mes: m, nombre: MESES[m - 1],
+        planta: d.plantaPorMes[id] || null,
+        tieneIngresos: !!p.tieneIngresos,
+        tieneRetiros: d.datos.some(function (x) { return x.periodo === id && x.retiros; }),
+        fuenteRetiros: p.fuenteRetiros || 'carpeta',
+        tieneSubprocesos: !!p.tieneSubprocesos
+      };
+    });
+    d.datos.sort(function (a, b) { return a.periodo.localeCompare(b.periodo) || empresas.indexOf(a.empresa) - empresas.indexOf(b.empresa); });
+    d.subprocesos.datos.sort(function (a, b) { return a.periodo.localeCompare(b.periodo) || SUBPROCESOS.indexOf(a.subproceso) - SUBPROCESOS.indexOf(b.subproceso); });
+    d.version = 3;
+    d.umbralDias = UMBRAL_DIAS;
+    d.generado = new Date().toISOString();
+
+    var cambios = Object.keys(tocados).sort().map(function (p) {
+      return { periodo: p, nombre: MESES[Number(p.slice(5, 7)) - 1] + ' ' + p.slice(0, 4), antes: totalesPeriodo(base, p), despues: totalesPeriodo(d, p) };
+    });
+    return { data: d, cambios: cambios, avisos: avisos.concat(r.avisos), errores: errores };
+  }
+
+  var api = { procesar: procesar, fusionar: fusionar, MESES: MESES, UMBRAL_DIAS: UMBRAL_DIAS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ProcesarSary = api;
 })(this);
