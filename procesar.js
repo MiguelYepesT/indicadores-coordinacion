@@ -252,7 +252,7 @@
       for (var j = 0; j < m[i].length; j++) {
         var v = m[i][j];
         if (titulo === null && typeof v === 'string') {
-          var t = /^([A-ZÁÉÍÓÚ]+)\s+DE\s+(\d{4})$/.exec(limpiar(v));
+          var t = /^([A-ZÁÉÍÓÚ]+)\s+(?:DE\s+)?(\d{4})$/.exec(limpiar(v));
           if (t && MESES.indexOf(t[1]) >= 0) titulo = { mes: MESES.indexOf(t[1]) + 1, anio: +t[2], texto: limpiar(v) };
         }
         if (total === null && encabezado(v) === 'TOTAL' && typeof m[i][j + 1] === 'number' && m[i][j + 1] > 20) total = Math.round(m[i][j + 1]);
@@ -272,7 +272,7 @@
     return t.charAt(0).toUpperCase() + t.slice(1);
   }
   function leerArchivoPlanta(XLSX, wb) {
-    var totales = {}, areas = {}, n = 0;
+    var totales = {}, areas = {}, resumen = {}, n = 0;
     wb.SheetNames.forEach(function (nombre) {
       var m = XLSX.utils.sheet_to_json(wb.Sheets[nombre], { header: 1, raw: true, defval: null });
       var actual = null, enAreas = false;
@@ -282,15 +282,25 @@
         for (var j = 0; j < fila.length; j++) {
           var v = fila[j];
           if (typeof v !== 'string') continue;
-          var t = /^([A-ZÁÉÍÓÚ]+)\s+DE\s+(\d{4})$/.exec(limpiar(v));
+          var t = /^([A-ZÁÉÍÓÚ]+)\s+(?:DE\s+)?(\d{4})$/.exec(limpiar(v));
           if (t && MESES.indexOf(t[1]) >= 0) { actual = idPeriodo(+t[2], MESES.indexOf(t[1]) + 1); enAreas = false; return; }
           if (!actual) return;
-          var et = encabezado(v), num = fila[j + 1], ret = fila[j + 2];
+          var et = encabezado(v), num = fila[j + 1], ret = fila[j + 2], R = resumen[actual];
           if (et === 'TOTAL' && typeof num === 'number' && num > 20) {
-            if (!totales[actual]) { totales[actual] = Math.round(num); n++; areas[actual] = []; enAreas = true; }
+            if (!totales[actual]) {
+              totales[actual] = Math.round(num); n++; areas[actual] = []; enAreas = true;
+              resumen[actual] = { planta: Math.round(num), retiros: typeof ret === 'number' ? Math.round(ret) : null, renuncias: null, terminaciones: null, vinculacion: null };
+            }
             return;
           }
-          if (/^(RENUNCIA|TERMINACION|AREAS)/.test(et)) { enAreas = false; return; }
+          // Renuncias y terminaciones (dos formatos: fila con número o texto entre paréntesis)
+          var mr = /\((\d+)\s*RENUNCIAS?\)/.exec(et), mt = /CONTROLADA\s*=\s*(\d+)/.exec(et);
+          if (R && mr) R.renuncias = +mr[1];
+          else if (R && mt) R.terminaciones = +mt[1];
+          else if (R && /^RENUNCIAS?$/.test(et) && typeof num === 'number') R.renuncias = Math.round(num);
+          else if (R && /^TERMINACION/.test(et) && /DIRECTA/.test(et) && typeof num === 'number') R.vinculacion = Math.round(num);
+          else if (R && /^TERMINACION/.test(et) && typeof num === 'number') R.terminaciones = Math.round(num);
+          if (/^(RENUNCIA|TERMINACION|AREAS|SIN ROTACION|ROTACION)/.test(et)) { enAreas = false; return; }
           if (enAreas && typeof num === 'number') {
             areas[actual].push({ area: nombreArea(v), planta: Math.round(num), retiros: typeof ret === 'number' ? Math.round(ret) : 0 });
           }
@@ -298,8 +308,9 @@
         }
       });
     });
-    return n ? { totales: totales, areas: areas } : null;
+    return n ? { totales: totales, areas: areas, resumen: resumen } : null;
   }
+
 
 
   // ---------- Procesamiento principal ----------
@@ -384,7 +395,7 @@
         if (!tieneIngresos) {
           var valores = leerArchivoPlanta(XLSX, wb);
           if (valores) {
-            archivosPlanta.push({ nombre: f.nombre, fecha: f.fecha || 0, valores: valores.totales, areas: valores.areas });
+            archivosPlanta.push({ nombre: f.nombre, fecha: f.fecha || 0, valores: valores.totales, areas: valores.areas, resumen: valores.resumen });
             return;
           }
           avisos.push(f.nombre + ': no se reconoció como Excel mensual, consolidado de retiros ni total de empleados. No se usó.');
@@ -453,19 +464,18 @@
       usados.push(elegido.uso);
     }
 
-    // El archivo de total de empleados tiene prioridad sobre las hojas "Indicador de rotación"
-    if (archivosPlanta.length) {
-      archivosPlanta.sort(function (a, b) { return a.fecha - b.fecha || a.nombre.localeCompare(b.nombre); });
-      var ap = archivosPlanta[archivosPlanta.length - 1];
-      archivosPlanta.slice(0, -1).forEach(function (c) {
-        omitidos.push(c.nombre + ' (otra versión del total de empleados; se usó ' + ap.nombre.split('/').pop() + ', la más reciente)');
-      });
+    // Archivos de resumen mensual (TOTAL EMPLEADOS, resúmenes de años anteriores).
+    // Tienen prioridad sobre las hojas "Indicador de rotación". Si dos traen el mismo mes, gana el más reciente.
+    var resumenArchivo = {};
+    archivosPlanta.sort(function (a, b) { return a.fecha - b.fecha || a.nombre.localeCompare(b.nombre); });
+    archivosPlanta.forEach(function (ap) {
       Object.keys(ap.valores).forEach(function (per) {
         planta[per] = { valor: ap.valores[per], origen: 'Archivo de total de empleados', aviso: '' };
+        areasPorMes[per] = ap.areas[per];
+        resumenArchivo[per] = ap.resumen[per];
       });
       usados.push({ archivo: ap.nombre, tipo: 'planta', ingresos: 0, retiros: 0, meses: Object.keys(ap.valores).sort() });
-      areasPorMes = ap.areas;
-    }
+    });
 
     // Los meses del consolidado reemplazan los retiros de la carpeta
     var mesesConsol = {};
@@ -541,6 +551,7 @@
       datos: filas,
       retirosDetalle: retirosDetalle,
       areasPorMes: areasPorMes,
+      resumenArchivo: resumenArchivo,
       subprocesos: {
         lista: SUBPROCESOS,
         datos: Object.keys(sub).sort().map(function (k) { sub[k].dias.sort(function (x, y) { return x - y; }); return sub[k]; })
@@ -652,6 +663,17 @@
         if (o.aviso) avisos.push(o.aviso);
       }
     });
+    var historico = [];
+    var resNuevo = r.data.resumenArchivo || {};
+    if (Object.keys(resNuevo).length) {
+      d.resumenArchivo = d.resumenArchivo || {};
+      Object.keys(resNuevo).forEach(function (p) {
+        var cambia = JSON.stringify(d.resumenArchivo[p]) !== JSON.stringify(resNuevo[p]);
+        d.resumenArchivo[p] = resNuevo[p];
+        if (cambia && !perMap[p]) historico.push(p);
+        if (cambia && perMap[p]) tocados[p] = true;
+      });
+    }
     var areasNuevas = r.data.areasPorMes || {};
     if (Object.keys(areasNuevas).length) {
       d.areasPorMes = d.areasPorMes || {};
@@ -697,7 +719,7 @@
     var cambios = Object.keys(tocados).sort().map(function (p) {
       return { periodo: p, nombre: MESES[Number(p.slice(5, 7)) - 1] + ' ' + p.slice(0, 4), antes: totalesPeriodo(base, p), despues: totalesPeriodo(d, p) };
     });
-    return { data: d, cambios: cambios, avisos: avisos.concat(r.avisos), errores: errores };
+    return { data: d, cambios: cambios, historico: historico.sort(), avisos: avisos.concat(r.avisos), errores: errores };
   }
 
   var api = { procesar: procesar, fusionar: fusionar, MESES: MESES, UMBRAL_DIAS: UMBRAL_DIAS };

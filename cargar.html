@@ -121,6 +121,12 @@
         <span class="nombre"></span>
         <label class="boton secundario">Elegir archivo<input type="file" accept=".xlsx,.xls"></label>
       </div>
+      <div class="archivo" id="slotHist">
+        <strong>Resumen de un año anterior (opcional)</strong>
+        <small>Por ejemplo RETIROS 2025. Solo se usa para comparar contra el mismo mes del año anterior. Se carga una vez.</small>
+        <span class="nombre"></span>
+        <label class="boton secundario">Elegir archivo<input type="file" accept=".xlsx,.xls"></label>
+      </div>
     </div>
     <label class="campo" for="plantaManual">Planta del mes (opcional)</label>
     <input type="number" id="plantaManual" min="1" step="1" inputmode="numeric" placeholder="Solo si no viene en el archivo de total de empleados">
@@ -172,9 +178,9 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="procesar.js"></script>
-<script src="cifrado.js"></script>
-<script src="github.js"></script>
+<script src="procesar.js?v=20261006c"></script>
+<script src="cifrado.js?v=20261006c"></script>
+<script src="github.js?v=20261006c"></script>
 <script>
 (function () {
   'use strict';
@@ -183,7 +189,7 @@
   var fmtP = new Intl.NumberFormat('es-CO', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 });
   var MESES = ProcesarSary.MESES;
   var estado = { base: null, sha: null, pin: null, fuente: null, resultado: null };
-  var archivos = { slotMensual: null, slotConsol: null, slotPlanta: null };
+  var archivos = { slotMensual: null, slotConsol: null, slotPlanta: null, slotHist: null };
 
   function cap(t) { return t.charAt(0) + t.slice(1).toLowerCase(); }
   function nombrePer(id) { return MESES[Number(id.slice(5, 7)) - 1] + ' ' + id.slice(0, 4); }
@@ -196,11 +202,24 @@
   function cargarAccesoGuardado() {
     try { return JSON.parse(sessionStorage.getItem('sary-acceso') || 'null'); } catch (e) { return null; }
   }
-  function leerArchivoAcceso() {
+  // Primero lo lee directo de GitHub (sin esperar a que se publique la página);
+  // si eso falla, usa la copia publicada en el sitio.
+  function leerDelSitio() {
     return fetch('acceso.json?v=' + Date.now(), { cache: 'no-store' }).then(function (r) {
       if (r.status === 404) throw new Error('SIN_ACCESO');
       if (!r.ok) throw new Error('No se pudo leer acceso.json (' + r.status + ').');
       return r.json();
+    });
+  }
+  function leerArchivoAcceso() {
+    var s = GitHubSary.sugerencia();
+    if (!s.owner || !s.repo) return leerDelSitio();
+    return GitHubSary.leer({ owner: s.owner, repo: s.repo }, 'acceso.json').then(function (r) {
+      if (!r.texto) throw new Error('SIN_ACCESO');
+      return JSON.parse(r.texto);
+    }).catch(function (err) {
+      if (err.message === 'SIN_ACCESO') return leerDelSitio();
+      return leerDelSitio();
     });
   }
   $('btnSalir').onclick = function () { sessionStorage.removeItem('sary-acceso'); location.reload(); };
@@ -390,17 +409,22 @@
       return '<tr><td>' + cap(c.nombre) + '</td>' + celda(ingA, ingD) + celda(c.antes.retiros, c.despues.retiros) +
         celda(c.antes.rotTemprana, c.despues.rotTemprana) + celda(c.antes.planta, c.despues.planta) +
         celda(idx(c.antes), idx(c.despues), fp) + '</tr>';
-    }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gris)">Los archivos no cambian ningún dato publicado.</td></tr>';
+    }).join('') : (res.historico.length ? '' : '<tr><td colspan="6" style="text-align:center;color:var(--gris)">Los archivos no cambian ningún dato publicado.</td></tr>');
+    if (res.historico.length) {
+      var h0 = res.historico[0], h1 = res.historico[res.historico.length - 1];
+      $('tCambios').innerHTML += '<tr><td colspan="6" style="text-align:left;background:#F3FAF5"><strong class="ok">Datos de comparación:</strong> se agregan ' + res.historico.length + ' mes(es), de ' + cap(nombrePer(h0)) + ' a ' + cap(nombrePer(h1)) + '. Se usan para comparar contra el mismo mes del año anterior.</td></tr>';
+    }
 
     var reconocidos = r.usados.map(function (u) { return u.tipo; });
     var faltan = [];
     if (archivos.slotMensual && reconocidos.indexOf('mensual') < 0) faltan.push('El archivo de ingresos y retiros no se reconoció como Excel mensual (debe tener la hoja INGRESOS).');
     if (archivos.slotConsol && reconocidos.indexOf('consolidado') < 0) faltan.push('El archivo de retiros no se reconoció como consolidado (debe tener la columna FECHA DE RETIRO).');
     if (archivos.slotPlanta && reconocidos.indexOf('planta') < 0) faltan.push('El archivo de total de empleados no tiene bloques con "MES DE AÑO" y la fila TOTAL.');
+    if (archivos.slotHist && reconocidos.indexOf('planta') < 0) faltan.push('El resumen del año anterior no tiene bloques con "MES DE AÑO" y la fila TOTAL.');
     var errores = res.errores.concat(faltan);
     $('cajaErrores').innerHTML = errores.length ? '<div class="error-caja">' + errores.map(escapar).join('<br>') + '</div>' : '';
     $('lAvisos').innerHTML = res.avisos.concat(r.omitidos.map(function (o) { return 'No se usó: ' + o; })).map(function (a) { return '<li>' + escapar(a) + '</li>'; }).join('');
-    var puede = !errores.length && res.cambios.length > 0 && estado.fuente === 'github';
+    var puede = !errores.length && (res.cambios.length > 0 || res.historico.length > 0) && estado.fuente === 'github';
     $('btnPublicar').disabled = !puede;
     $('btnPublicar').title = '';
   }
@@ -413,7 +437,8 @@
     e.textContent = 'Protegiendo con el PIN…';
     CifradoSary.cifrar(estado.resultado.data, estado.pin).then(function (paquete) {
       e.textContent = 'Publicando en GitHub…';
-      var meses = estado.resultado.cambios.map(function (x) { return cap(x.nombre); }).join(', ');
+      var meses = estado.resultado.cambios.map(function (x) { return cap(x.nombre); }).join(', ') +
+        (estado.resultado.historico.length ? (estado.resultado.cambios.length ? '; ' : '') + 'comparación ' + estado.resultado.historico[0].slice(0, 4) : '');
       return GitHubSary.guardar(c, 'data.json', JSON.stringify(paquete), estado.sha, 'Actualiza datos: ' + meses);
     }).then(function (r) {
       estado.base = estado.resultado.data;
